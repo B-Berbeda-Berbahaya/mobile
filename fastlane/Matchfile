@@ -1,0 +1,4 @@
+git_url("https://github.com/B-Berbeda-Berbahaya/mobile-certificate.git")
+storage_mode("git")
+type("appstore")
+app_identifier(["com.dangerndiffer.WorkspacyAR"])
