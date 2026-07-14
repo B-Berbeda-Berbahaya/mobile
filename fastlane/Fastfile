@@ -18,13 +18,6 @@ platform :ios do
   private_lane :setup_signing do |options|
     match(type: "appstore", readonly: true, api_key: options[:api_key])
 
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "WorkspacyAR.xcodeproj",
-      team_id: "CWXJ4ZG5J4",
-      bundle_identifier: "com.dangerndiffer.WorkspacyAR",
-      profile_name: "match AppStore com.dangerndiffer.WorkspacyAR"
-    )
   end
 
   desc "Push to dev branch -> patch bump + TestFlight"
@@ -44,6 +37,7 @@ platform :ios do
       output_directory: "./build",
       export_options: {
         method: "app-store",
+        signingStyle: "manual",
         provisioningProfiles: {
           "com.dangerndiffer.WorkspacyAR" => "match AppStore com.dangerndiffer.WorkspacyAR"
         }
