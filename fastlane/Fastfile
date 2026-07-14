@@ -3,6 +3,9 @@ default_platform(:ios)
 platform :ios do
   before_all do
     setup_ci if ENV["CI"]
+    setup_ci if ENV["CI"]
+    sh("git config user.name 'CI Bot'")
+    sh("git config user.email 'ci-bot@dangerndiffer.com'")
   end
 
   desc "Auth to App Store Connect"
