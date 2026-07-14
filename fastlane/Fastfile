@@ -18,6 +18,16 @@ platform :ios do
   private_lane :setup_signing do |options|
     match(type: "appstore", readonly: true, api_key: options[:api_key])
 
+    # 2. Ambil path profile yang diunduh match
+    # Ini akan mencari file .mobileprovision terbaru di folder profil
+    profile_path = Dir["#{Dir.home}/Library/MobileDevice/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
+
+    # 3. Paksa gunakan profile tersebut ke target
+    update_project_provisioning(
+      xcodeproj: "WorkspacyAR.xcodeproj",
+      target_filter: "WorkspacyAR",
+      profile: profile_path # Masukkan PATH file-nya, bukan nama string
+    )
   end
 
   desc "Push to dev branch -> patch bump + TestFlight"
@@ -33,8 +43,10 @@ platform :ios do
 
     build_app(
       scheme: "WorkspacyAR",
+      clean: true,
       export_method: "app-store",
       output_directory: "./build",
+      allow_provisioning_updates: true,
       export_options: {
         method: "app-store",
         signingStyle: "manual",
