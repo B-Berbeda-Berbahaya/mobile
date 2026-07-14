@@ -20,17 +20,6 @@ platform :ios do
 
   private_lane :setup_signing do |options|
     match(type: "appstore", readonly: true, api_key: options[:api_key])
-
-    # 2. Ambil path profile yang diunduh match
-    # Ini akan mencari file .mobileprovision terbaru di folder profil
-    # profile_path = Dir["#{Dir.home}/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
-
-    # 3. Paksa gunakan profile tersebut ke target
-    # update_project_provisioning(
-    #   xcodeproj: "WorkspacyAR.xcodeproj",
-    #   target_filter: "WorkspacyAR",
-    #   profile: profile_path
-    # )
   end
 
   desc "Push to dev branch -> patch bump + TestFlight"
@@ -44,25 +33,40 @@ platform :ios do
     increment_version_number(version_number: new_version)
     increment_build_number(build_number: ENV["GITHUB_RUN_NUMBER"])
 
-    build_app(
-      scheme: "WorkspacyAR",
-      clean: true,
-      export_method: "app-store",
-      output_directory: "./build",
-      export_team_id: "CWXJ4ZG5J4",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",
-        provisioningProfiles: {
-            "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
-        }
-      }
-    )
+    # build_app(
+    #   scheme: "WorkspacyAR",
+    #   clean: true,
+    #   export_method: "app-store",
+    #   output_directory: "./build",
+    #   export_team_id: "CWXJ4ZG5J4",
+    #   export_options: {
+    #     method: "app-store",
+    #     signingStyle: "manual",
+    #     provisioningProfiles: {
+    #         "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
+    #     }
+    #   }
+    # )
 
-    upload_to_testflight(
-      api_key: api_key,
-      skip_waiting_for_build_processing: true
-    )
+    # upload_to_testflight(
+    #   api_key: api_key,
+    #   skip_waiting_for_build_processing: true
+    # )
+
+    # Github pre-release
+    ipa_path = "/Users/runner/work/mobile/mobile/build/WorkspacyAR.ipa"
+    tag_name = "v#{new_version}-beta"
+
+    set_github_release(
+        repository_name: ENV["GITHUB_REPOSITORY"],
+        api_token: ENV["GITHUB_TOKEN"],
+        tag_name: tag_name,
+        name: tag_name,
+        description: "Prerelease build #{tag_name}\n\nIPA: `WorkspacyAR.ipa` attached below.",
+        commitish: "dev",
+        is_prerelease: true,
+        # upload_assets: [ipa_path]
+      )
 
     git_commit(
       path: ["*.xcodeproj/project.pbxproj"],
