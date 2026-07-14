@@ -20,14 +20,14 @@ platform :ios do
 
     # 2. Ambil path profile yang diunduh match
     # Ini akan mencari file .mobileprovision terbaru di folder profil
-    profile_path = Dir["#{Dir.home}/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
+    # profile_path = Dir["#{Dir.home}/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
 
     # 3. Paksa gunakan profile tersebut ke target
-    update_project_provisioning(
-      xcodeproj: "WorkspacyAR.xcodeproj",
-      target_filter: "WorkspacyAR",
-      profile: profile_path
-    )
+    # update_project_provisioning(
+    #   xcodeproj: "WorkspacyAR.xcodeproj",
+    #   target_filter: "WorkspacyAR",
+    #   profile: profile_path
+    # )
   end
 
   desc "Push to dev branch -> patch bump + TestFlight"
@@ -47,12 +47,11 @@ platform :ios do
       export_method: "app-store",
       output_directory: "./build",
       export_team_id: "CWXJ4ZG5J4",
-      # Kembalikan export_options, ini adalah cara resmi gym untuk mapping profile
       export_options: {
         method: "app-store",
         signingStyle: "manual",
         provisioningProfiles: {
-          "com.dangerndiffer.WorkspacyAR" => "match AppStore com.dangerndiffer.WorkspacyAR"
+            "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
         }
       }
     )
