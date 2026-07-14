@@ -20,13 +20,13 @@ platform :ios do
 
     # 2. Ambil path profile yang diunduh match
     # Ini akan mencari file .mobileprovision terbaru di folder profil
-    profile_path = Dir["#{Dir.home}/Library/MobileDevice/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
+    profile_path = Dir["#{Dir.home}/Library/Developer/Xcode/UserData/Provisioning Profiles/*.mobileprovision"].max_by { |f| File.mtime(f) }
 
     # 3. Paksa gunakan profile tersebut ke target
     update_project_provisioning(
       xcodeproj: "WorkspacyAR.xcodeproj",
       target_filter: "WorkspacyAR",
-      profile: profile_path # Masukkan PATH file-nya, bukan nama string
+      profile: profile_path
     )
   end
 
