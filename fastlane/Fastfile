@@ -46,7 +46,8 @@ platform :ios do
       clean: true,
       export_method: "app-store",
       output_directory: "./build",
-      allow_provisioning_updates: true,
+      export_team_id: "CWXJ4ZG5J4",
+      # Kembalikan export_options, ini adalah cara resmi gym untuk mapping profile
       export_options: {
         method: "app-store",
         signingStyle: "manual",
