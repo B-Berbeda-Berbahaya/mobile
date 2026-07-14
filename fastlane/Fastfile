@@ -62,7 +62,7 @@ platform :ios do
     )
 
     git_commit(
-      path: ["*.xcodeproj/project.pbxproj", "**/Info.plist"],
+      path: ["*.xcodeproj/project.pbxproj"],
       message: "chore(ci): bump version to #{new_version} (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
     )
     push_to_git_remote(remote_branch: "dev")
@@ -89,7 +89,7 @@ platform :ios do
     )
 
     git_commit(
-      path: ["*.xcodeproj/project.pbxproj", "**/Info.plist"],
+      path: ["*.xcodeproj/project.pbxproj"],
       message: "chore(release): version #{version} (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
     )
     push_to_git_remote(remote_branch: "main")
