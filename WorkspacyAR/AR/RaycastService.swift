@@ -1,12 +1,17 @@
 import ARKit
 import RealityKit
 
-// Wraps ARKit/RealityKit raycast queries.
-// Responsibility: given a screen point (from a tap gesture) and an
-// ARView, perform a raycast against detected real-world planes and
-// return the resulting world-space transform/position, if any.
-
-struct RaycastService {
-
-    // TODO: func raycastWorldPosition(from screenPoint: CGPoint, in arView: ARView) -> SIMD3<Float>?
+public struct RaycastService {
+    public init() {}
+    
+    public func raycastWorldPosition(from screenPoint: CGPoint, in arView: ARView) -> SIMD3<Float>? {
+        let results = arView.raycast(from: screenPoint, allowing: .estimatedPlane, alignment: .horizontal)
+        
+        guard let firstResult = results.first else {
+            return nil
+        }
+        
+        let transform = firstResult.worldTransform
+        return SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+    }
 }
