@@ -102,6 +102,12 @@ platform :ios do
       api_key: api_key,
       skip_waiting_for_build_processing: true
     )
+
+    git_commit(
+      path: ["*.xcodeproj/project.pbxproj"],
+      message: "chore(ci): bump build version to (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
+    )
+    push_to_git_remote(remote_branch: "dev")
   end
 
   desc "GitHub Release published in main -> set version from tag + TestFlight"
