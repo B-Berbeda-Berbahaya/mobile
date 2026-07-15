@@ -1,11 +1,11 @@
 import simd
 
-// Convenience accessors on simd_float4x4 (transform matrices returned
-// by ARAnchor/ARPlaneAnchor/raycast results). Responsibility: extract
-// translation/rotation components without repeating column-indexing
-// logic across AR/Grid layers.
-
-// TODO: extension simd_float4x4 {
-//     var translation: SIMD3<Float> { get }
-//     var rotation: simd_quatf { get }
-// }
+extension simd_float4x4 {
+    public var translation: SIMD3<Float> {
+        return SIMD3<Float>(columns.3.x, columns.3.y, columns.3.z)
+    }
+    
+    public var rotation: simd_quatf {
+        return simd_quatf(self)
+    }
+}
