@@ -3,6 +3,7 @@ import SwiftUI
 struct GuideObjectView: View {
     let onDismiss: (() -> Void)
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @StateObject private var viewModel = GuideViewModel()
     let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     
     var body: some View {
@@ -20,11 +21,9 @@ struct GuideObjectView: View {
                     .padding(.top, 16)
                 
                 VStack(spacing: 10) {
-                    GestureGuideRow(imageName: "1finger", title: "Move Item", description: "Drag 1 finger to move the object on the desk surface.")
-                    
-                    GestureGuideRow(imageName: "2finger", title: "Rotate Item", description: "Twist 2 fingers to rotate the object on its axis.")
-                    
-                    GestureGuideRow(imageName: "3finger", title: "Adjust Height", description: "Drag 3 fingers up/down to set height or altitude offset.")
+                    ForEach(viewModel.gestureItems) { item in
+                        GestureGuideRow(imageName: item.imageName, title: item.title, description: item.description)
+                    }
                 }
                 .padding(.horizontal, 16)
                 

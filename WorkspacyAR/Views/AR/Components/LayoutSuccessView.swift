@@ -5,6 +5,8 @@ struct LayoutSuccessView: View {
     var onSaveAndExit: () -> Void
     
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @StateObject private var viewModel = LayoutSuccessViewModel()
+    
     let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     let sageGreen = Color(red: 0.42, green: 0.55, blue: 0.44)
     
@@ -60,7 +62,7 @@ struct LayoutSuccessView: View {
                                 Image(systemName: "shield.fill")
                                     .font(.caption2)
                                     .foregroundColor(sageGreen)
-                                Text("84/100")
+                                Text("\(viewModel.score)/100")
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundColor(sageGreen)
                             }
@@ -71,15 +73,15 @@ struct LayoutSuccessView: View {
                         }
                         
                         VStack(spacing: 12) {
-                            DiagnosticRow(title: "Eye Gaze Level", rating: "Optimal", description: "Display is level with your seated eye height.", isOptimal: true)
-                            
-                            Divider()
-                            
-                            DiagnosticRow(title: "Wrist Extension", rating: "Comfortable", description: "Keyboard offset supports a flat wrist angle.", isOptimal: true)
-                            
-                            Divider()
-                            
-                            DiagnosticRow(title: "Seating Clearance", rating: "Pass", description: "Distance permits 90° leg flexion clearance.", isOptimal: true)
+                            let itemsCount = viewModel.diagnostics.count
+                            ForEach(0..<itemsCount, id: \.self) { idx in
+                                let item = viewModel.diagnostics[idx]
+                                DiagnosticRow(title: item.title, rating: item.rating, description: item.description, isOptimal: item.isOptimal)
+                                
+                                if idx < itemsCount - 1 {
+                                    Divider()
+                                }
+                            }
                         }
                     }
                     .padding(20)
@@ -90,7 +92,6 @@ struct LayoutSuccessView: View {
                     // Actions Panel
                     VStack(spacing: 12) {
                         Button(action: {
-                            // Dummy share sheet trigger
                             let activityVC = UIActivityViewController(activityItems: ["Check out my ergonomic workspace setup on Workspacy!"], applicationActivities: nil)
                             if let rootVC = UIApplication.shared.windows.first?.rootViewController {
                                 activityVC.popoverPresentationController?.sourceView = rootVC.view
@@ -144,14 +145,14 @@ struct LayoutSchematicPreview: View {
         ZStack {
             // Desk surface representation
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(red: 0.93, green: 0.90, blue: 0.85)) // Oak color wood surface
+                .fill(Color(red: 0.93, green: 0.90, blue: 0.85))
                 .frame(height: 180)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(themeBrown.opacity(0.12), lineWidth: 1)
                 )
             
-            // Grid lines overlay representing workspace lines
+            // Grid lines overlay
             Path { path in
                 let step = 30.0
                 var x = 30.0
@@ -169,7 +170,6 @@ struct LayoutSchematicPreview: View {
                     .foregroundColor(.secondary)
             } else {
                 ForEach(placedObjects, id: \.id) { obj in
-                    // Map grid positions to visually balanced offsets inside the desk frame
                     let xOffset = CGFloat(obj.gridX) * 28.0
                     let zOffset = CGFloat(-obj.gridZ) * 24.0
                     
@@ -234,8 +234,7 @@ struct DiagnosticRow: View {
     LayoutSuccessView(
         placedObjects: [
             PlacedObjectSim(id: UUID(), type: .monitor34, gridX: 0, gridZ: 2, rotation: 0),
-            PlacedObjectSim(id: UUID(), type: .keyboard, gridX: 0, gridZ: 0, rotation: 0),
-            PlacedObjectSim(id: UUID(), type: .mouse, gridX: 2, gridZ: 0, rotation: 0)
+            PlacedObjectSim(id: UUID(), type: .keyboard, gridX: 0, gridZ: 0, rotation: 0)
         ],
         onSaveAndExit: {}
     )

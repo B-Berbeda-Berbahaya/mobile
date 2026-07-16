@@ -1,11 +1,7 @@
 import SwiftUI
 
 struct RecentDesignsCarousel: View {
-    let designs: [WorkspaceDesign] = [
-        WorkspaceDesign(name: "Ultimate Coding Desk", itemCount: 7, ergonomicsScore: 84, iconName: "desktopcomputer"),
-        WorkspaceDesign(name: "Home Office Setup", itemCount: 4, ergonomicsScore: 62, iconName: "laptopcomputer"),
-        WorkspaceDesign(name: "Standing Studio", itemCount: 5, ergonomicsScore: 91, iconName: "arrow.up.and.down.square")
-    ]
+    let designs: [WorkspaceDesign]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -74,7 +70,9 @@ struct RecentDesignsCarousel: View {
 }
 
 #Preview {
-    RecentDesignsCarousel()
-        .padding()
-        .background(Color(.systemGroupedBackground))
+    RecentDesignsCarousel(designs: [
+        WorkspaceDesign(name: "Ultimate Coding Desk", itemCount: 7, ergonomicsScore: 84, iconName: "desktopcomputer")
+    ])
+    .padding()
+    .background(Color(.systemGroupedBackground))
 }

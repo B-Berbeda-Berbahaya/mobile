@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ErgonomicsScoreCard: View {
-    let score: Int = 78
+    let score: Int
     
     var body: some View {
         HStack(spacing: 16) {
@@ -45,7 +45,7 @@ struct ErgonomicsScoreCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Spacer() // Pushes items to stretch the card to full available width
+            Spacer()
         }
         .padding(18)
         .background(Color(.secondarySystemGroupedBackground))
@@ -55,7 +55,7 @@ struct ErgonomicsScoreCard: View {
 }
 
 #Preview {
-    ErgonomicsScoreCard()
+    ErgonomicsScoreCard(score: 78)
         .padding()
         .background(Color(.systemGroupedBackground))
 }

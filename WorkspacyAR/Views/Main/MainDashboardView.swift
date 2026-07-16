@@ -4,12 +4,13 @@ struct MainDashboardView: View {
     // Callback to open AR Designer tab
     var onOpenARScanner: (() -> Void)? = nil
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @StateObject private var viewModel = DashboardViewModel()
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 // Header Profile Section
-                DashboardHeaderView()
+                DashboardHeaderView(username: viewModel.username)
                     .frame(maxWidth: 1000)
                     .frame(maxWidth: .infinity, alignment: .center)
                 
@@ -26,17 +27,17 @@ struct MainDashboardView: View {
                             
                             Spacer(minLength: 16)
                             
-                            QuickTipWidget()
+                            QuickTipWidget(tipText: viewModel.currentTip)
                         }
                         .frame(maxWidth: .infinity)
                         
                         // Right Column (Compliance score and Saved Designs)
                         VStack(alignment: .leading, spacing: 16) {
-                            ErgonomicsScoreCard()
+                            ErgonomicsScoreCard(score: viewModel.complianceScore)
                             
                             Spacer(minLength: 16)
                             
-                            RecentDesignsCarousel()
+                            RecentDesignsCarousel(designs: viewModel.recentDesigns)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -47,7 +48,7 @@ struct MainDashboardView: View {
                 } else {
                     // iPhone / Compact: Standard vertical stacking with spacers
                     VStack(alignment: .leading, spacing: 16) {
-                        ErgonomicsScoreCard()
+                        ErgonomicsScoreCard(score: viewModel.complianceScore)
                             .padding(.horizontal)
                         
                         Spacer(minLength: 12)
@@ -61,12 +62,12 @@ struct MainDashboardView: View {
                         Spacer(minLength: 12)
                         
                         // Recent Designs horizontal carousel
-                        RecentDesignsCarousel()
+                        RecentDesignsCarousel(designs: viewModel.recentDesigns)
                         
                         Spacer(minLength: 12)
                         
                         // Ergonomic Quick Tip Card
-                        QuickTipWidget()
+                        QuickTipWidget(tipText: viewModel.currentTip)
                             .padding(.horizontal)
                             .padding(.bottom, 20)
                     }
@@ -79,6 +80,8 @@ struct MainDashboardView: View {
 
 // Small Sub-component: Dashboard Header
 struct DashboardHeaderView: View {
+    let username: String
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -87,7 +90,7 @@ struct DashboardHeaderView: View {
                     .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.38))
                     .tracking(2)
                 
-                Text("Hi, Ady")
+                Text("Hi, \(username)")
                     .font(.system(size: 32, weight: .bold, design: .serif))
                     .foregroundColor(.primary)
             }
@@ -112,6 +115,8 @@ struct DashboardHeaderView: View {
 
 // Small Sub-component: Quick tip summary box styled like a catalog advice box
 struct QuickTipWidget: View {
+    let tipText: String
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
@@ -127,7 +132,7 @@ struct QuickTipWidget: View {
                 Spacer()
             }
             
-            Text("Keep your mouse and keyboard close to each other. Your wrists should stay parallel to the floor, and you should avoid resting them on the hard edges of your desk while typing.")
+            Text(tipText)
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .lineSpacing(3)
