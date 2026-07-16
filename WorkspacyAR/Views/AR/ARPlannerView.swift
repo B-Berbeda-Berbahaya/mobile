@@ -22,7 +22,7 @@ struct ARPlannerView: View {
         PlacedObjectSim(id: UUID(), type: .keyboard, gridX: 0, gridZ: 0, rotation: 0, heightOffset: 0, distance: 40)
     ]
     @State private var selectedObject: PlacedObjectSim? = nil
-    @State private var selectedObjectType: PlaceableObjectType = .ergonomicChair
+    @Binding var selectedObjectType: PlaceableObjectType
     @State private var selectedCategory: ItemCategory = .furniture
     @State private var showDebugGrid = true
     @State private var isARMode = true
