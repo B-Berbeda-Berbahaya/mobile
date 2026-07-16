@@ -27,6 +27,8 @@ struct ARPlannerView: View {
     @State private var showDebugGrid = true
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
+    @State private var popoverPosition: CGPoint = .zero
+    @State private var interactionMode: ARInteractionMode = .none
     
     var body: some View {
         ZStack {
@@ -36,6 +38,11 @@ struct ARPlannerView: View {
                     if let coordinator = coordinator {
                         ARContainerView(sessionManager: sessionManager, coordinator: coordinator)
                             .ignoresSafeArea()
+                        
+                        if popoverPosition != .zero {
+                            ARFloatingPopover(coordinator: coordinator, interactionMode: $interactionMode)
+                                .position(popoverPosition)
+                        }
                     } else {
                         Color.black.ignoresSafeArea()
                         ProgressView("Initializing AR Studio...")
@@ -110,6 +117,7 @@ struct ARPlannerView: View {
                             },
                             onDismiss: {
                                 withAnimation { selectedObject = nil }
+                                coordinator?.deselectCurrentObject()
                             }
                         )
                         .transition(.move(edge: .bottom))
@@ -119,6 +127,22 @@ struct ARPlannerView: View {
         }
         .onAppear {
             initializeCoordinator()
+        }
+        .onChange(of: selectedObject) { _, newObj in
+            if let newObj = newObj {
+                if coordinator?.selectedPlacedObject?.id != newObj.id {
+                    if let obj = coordinator?.anchorManager.placedObjects.first(where: { $0.id == newObj.id }) {
+                        coordinator?.selectObject(obj)
+                    }
+                }
+            } else {
+                if coordinator?.selectedPlacedObject != nil {
+                    coordinator?.deselectCurrentObject()
+                }
+            }
+        }
+        .onChange(of: interactionMode) { _, newMode in
+            coordinator?.interactionMode = newMode
         }
     }
     
@@ -130,6 +154,7 @@ struct ARPlannerView: View {
             coord.onSelectedObjectChanged = { placedObj in
                 if let obj = placedObj {
                     withAnimation {
+                        interactionMode = coord.interactionMode
                         if let index = placedObjects.firstIndex(where: { $0.id == obj.id }) {
                             selectedObject = placedObjects[index]
                         } else {
@@ -146,6 +171,34 @@ struct ARPlannerView: View {
                 } else {
                     withAnimation { selectedObject = nil }
                 }
+            }
+            coord.onPlacedObjectUpdated = { updatedObj in
+                if let index = placedObjects.firstIndex(where: { $0.id == updatedObj.id }) {
+                    let snappedWorldPos = coord.mapper.worldPosition(for: updatedObj.gridCoordinate)
+                    let heightCm = (updatedObj.entity.transform.translation.y - snappedWorldPos.y) * 100.0
+                    
+                    let forward = updatedObj.entity.transform.rotation.act(SIMD3<Float>(0, 0, 1))
+                    let yawAngle = atan2(forward.x, forward.z)
+                    var yawDegrees = yawAngle * 180.0 / .pi
+                    if yawDegrees < 0 {
+                        yawDegrees += 360.0
+                    }
+                    
+                    withAnimation {
+                        interactionMode = coord.interactionMode
+                        placedObjects[index].gridX = updatedObj.gridCoordinate.x
+                        placedObjects[index].gridZ = updatedObj.gridCoordinate.z
+                        placedObjects[index].rotation = yawDegrees
+                        placedObjects[index].heightOffset = heightCm
+                        
+                        if selectedObject?.id == updatedObj.id {
+                            selectedObject = placedObjects[index]
+                        }
+                    }
+                }
+            }
+            coord.onPopoverPositionChanged = { position in
+                popoverPosition = position
             }
             coordinator = coord
         }
