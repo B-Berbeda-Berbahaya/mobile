@@ -1,19 +1,25 @@
-//
-//  ContentView.swift
-//  WorkspacyAR
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @State private var selectedTab = 0
+    
     var body: some View {
-        VStack {
-            Image(systemName: "table")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Design your desk!")
+        TabView(selection: $selectedTab) {
+            MainDashboardView(onOpenARScanner: {
+                withAnimation { selectedTab = 1 }
+            })
+            .tabItem {
+                Label("Dashboard", systemImage: "house.fill")
+            }
+            .tag(0)
+            
+            ARPlannerView()
+                .tabItem {
+                    Label("AR Studio", systemImage: "arkit")
+                }
+                .tag(1)
         }
-        .padding()
+        .accentColor(.blue)
     }
 }
 

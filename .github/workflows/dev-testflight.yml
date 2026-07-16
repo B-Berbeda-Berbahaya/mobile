@@ -3,18 +3,22 @@ name: Dev - TestFlight (patch)
 on:
   push:
     branches: [ dev ]
+  workflow_dispatch:
+    inputs:
+      bump_patch_version:
+        description: 'Bump patch version'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
           ref: dev
           token: ${{ secrets.GH_PAT }}
-
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
       - name: Setup Ruby & Bundler
         uses: ruby/setup-ruby@v1
@@ -24,11 +28,25 @@ jobs:
       - name: Decode App Store Connect API Key
         run: echo "${{ secrets.ASC_KEY_CONTENT }}" | base64 --decode > asc_api_key.p8
 
-      - name: Run Fastlane (dev_patch)
+      - name: Run Fastlane and bump version (dev_patch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.bump_patch_version == 'true'
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: bundle exec fastlane dev_patch
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: bundle exec fastlane dev_patch_release
+      
+      - name: Run Fastlane WITHOUT bump version
+        if: github.event_name == 'push' && github.event.inputs.bump_patch_version != 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: bundle exec fastlane dev_build_release
+       

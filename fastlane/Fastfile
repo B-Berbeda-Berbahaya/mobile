@@ -3,6 +3,9 @@ default_platform(:ios)
 platform :ios do
   before_all do
     setup_ci if ENV["CI"]
+    setup_ci if ENV["CI"]
+    sh("git config user.name 'CI Bot'")
+    sh("git config user.email 'ci-bot@dangerndiffer.com'")
   end
 
   desc "Auth to App Store Connect"
@@ -15,11 +18,14 @@ platform :ios do
     )
   end
 
-  desc "Push to dev branch -> patch bump + TestFlight"
-  lane :dev_patch do
-    api_key = asc_api_key
+  private_lane :setup_signing do |options|
+    match(type: "appstore", readonly: true, api_key: options[:api_key])
+  end
 
-    match(type: "appstore", readonly: true, api_key: api_key)
+  desc "Push to dev branch -> patch bump + TestFlight"
+  lane :dev_patch_release do
+    api_key = asc_api_key
+    setup_signing(api_key: api_key)
 
     current = get_version_number(target: "WorkspacyAR")
     major, minor, patch = current.split(".").map(&:to_i)
@@ -29,8 +35,67 @@ platform :ios do
 
     build_app(
       scheme: "WorkspacyAR",
+      clean: true,
       export_method: "app-store",
-      output_directory: "./build"
+      output_directory: "./build",
+      export_team_id: "CWXJ4ZG5J4",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+            "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
+        }
+      }
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+
+    # Github pre-release
+    ipa_path = "/Users/runner/work/mobile/mobile/build/WorkspacyAR.ipa"
+    tag_name = "v#{new_version}-beta"
+
+    set_github_release(
+        repository_name: ENV["GITHUB_REPOSITORY"],
+        api_token: ENV["GITHUB_TOKEN"],
+        tag_name: tag_name,
+        name: tag_name,
+        description: "Prerelease build #{tag_name}\n\nIPA: `WorkspacyAR.ipa` attached below.",
+        commitish: "dev",
+        is_prerelease: true,
+        upload_assets: [ipa_path]
+      )
+
+    git_commit(
+      path: ["*.xcodeproj/project.pbxproj"],
+      message: "chore(ci): bump version to #{new_version} (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
+    )
+    push_to_git_remote(remote_branch: "dev")
+  end
+
+
+  desc "Push to dev without bump patch version"
+  lane :dev_build_release do
+    api_key = asc_api_key
+    setup_signing(api_key: api_key)
+
+    increment_build_number(build_number: ENV["GITHUB_RUN_NUMBER"])
+
+    build_app(
+      scheme: "WorkspacyAR",
+      clean: true,
+      export_method: "app-store",
+      output_directory: "./build",
+      export_team_id: "CWXJ4ZG5J4",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+            "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
+        }
+      }
     )
 
     upload_to_testflight(
@@ -39,8 +104,8 @@ platform :ios do
     )
 
     git_commit(
-      path: ["*.xcodeproj/project.pbxproj", "**/Info.plist"],
-      message: "chore(ci): bump version to #{new_version} (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
+      path: ["*.xcodeproj/project.pbxproj"],
+      message: "chore(ci): bump build version to (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
     )
     push_to_git_remote(remote_branch: "dev")
   end
@@ -48,17 +113,25 @@ platform :ios do
   desc "GitHub Release published in main -> set version from tag + TestFlight"
   lane :release do
     api_key = asc_api_key
+    setup_signing(api_key: api_key)
 
-    match(type: "appstore", readonly: true, api_key: api_key)
-
-    version = ENV["RELEASE_TAG"].sub(/^v/, "") # tag "v1.5.0" -> "1.5.0"
+    version = ENV["RELEASE_TAG"].sub(/^v/, "")
     increment_version_number(version_number: version)
     increment_build_number(build_number: ENV["GITHUB_RUN_NUMBER"])
 
     build_app(
       scheme: "WorkspacyAR",
+      clean: true,
       export_method: "app-store",
-      output_directory: "./build"
+      output_directory: "./build",
+      export_team_id: "CWXJ4ZG5J4",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+            "com.dangerndiffer.WorkspacyAR" => ENV["sigh_com.dangerndiffer.WorkspacyAR_appstore_profile-name"]
+        }
+      }
     )
 
     upload_to_testflight(
@@ -67,7 +140,7 @@ platform :ios do
     )
 
     git_commit(
-      path: ["*.xcodeproj/project.pbxproj", "**/Info.plist"],
+      path: ["*.xcodeproj/project.pbxproj"],
       message: "chore(release): version #{version} (#{ENV['GITHUB_RUN_NUMBER']}) [skip ci]"
     )
     push_to_git_remote(remote_branch: "main")
