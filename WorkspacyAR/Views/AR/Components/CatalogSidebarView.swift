@@ -1,0 +1,187 @@
+import SwiftUI
+
+struct CatalogSidebarView: View {
+    @Binding var selectedObjectType: PlaceableObjectType
+    @Binding var selectedCategory: ItemCategory
+    var onPlaceItem: (DeskItem) -> Void
+    var onClose: () -> Void
+    
+    @State private var viewModel = DirectoryViewModel()
+    
+    var body: some View {
+        GeometryReader { geo in
+            let sidebarWidth = geo.size.width * 0.70
+            
+            HStack(spacing: 0) {
+                // Main Sidebar Content (70% Width)
+                HStack(spacing: 0) {
+                    
+                    // Left Column: Item Selector Grid List (60% of sidebar)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Studio Catalog")
+                            .font(.system(.title2, design: .rounded))
+                            .fontWeight(.bold)
+                        
+                        // Custom search bar input
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.secondary)
+                            TextField("Search items...", text: $viewModel.searchText)
+                                .textFieldStyle(PlainTextFieldStyle())
+                        }
+                        .padding(10)
+                        .background(Color.white.opacity(0.08))
+                        .cornerRadius(12)
+                        
+                        // Categories sections scroll view
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 20) {
+                                ForEach(viewModel.filteredSections) { section in
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text(section.title)
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.secondary)
+                                            .textCase(.uppercase)
+                                            .tracking(1)
+                                        
+                                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
+                                            ForEach(section.items) { item in
+                                                Button(action: {
+                                                    viewModel.select(item)
+                                                }) {
+                                                    VStack(spacing: 8) {
+                                                        ZStack {
+                                                            RoundedRectangle(cornerRadius: 12)
+                                                                .fill(viewModel.selectedItem?.id == item.id ? Color.blue.opacity(0.15) : Color.white.opacity(0.05))
+                                                                .frame(height: 64)
+                                                            
+                                                            Image(systemName: item.systemImage)
+                                                                .font(.title2)
+                                                                .foregroundColor(viewModel.selectedItem?.id == item.id ? .blue : .primary)
+                                                        }
+                                                        
+                                                        Text(item.name)
+                                                            .font(.system(size: 10, weight: .medium))
+                                                            .foregroundColor(.primary)
+                                                            .lineLimit(1)
+                                                            .multilineTextAlignment(.center)
+                                                    }
+                                                    .padding(6)
+                                                    .background(viewModel.selectedItem?.id == item.id ? Color.white.opacity(0.05) : Color.clear)
+                                                    .cornerRadius(14)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 40)
+                    .padding(.bottom, 24)
+                    .frame(width: sidebarWidth * 0.60)
+                    
+                    // Separator bar
+                    Rectangle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 1)
+                        .ignoresSafeArea(.all, edges: .vertical)
+                    
+                    // Right Column: Preview Panel details (40% of sidebar)
+                    VStack(spacing: 20) {
+                        HStack {
+                            Spacer()
+                            Button(action: onClose) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.05))
+                                    .frame(width: 100, height: 100)
+                                
+                                Image(systemName: viewModel.selectedItem?.systemImage ?? "arkit")
+                                    .font(.system(size: 48, weight: .ultraLight))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            VStack(spacing: 6) {
+                                Text(viewModel.selectedItem?.name ?? "Select an Item")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text(viewModel.selectedItem != nil ? "Place this virtual prototype on your workspace surface to inspect the dimensions and ergonomics." : "Browse the catalog categories on the left list and pick a target to inspect.")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(2)
+                                    .padding(.horizontal, 10)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            if let item = viewModel.selectedItem {
+                                onPlaceItem(item)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "cube.fill")
+                                Text("Place in Studio")
+                                    .fontWeight(.bold)
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(viewModel.selectedItem == nil ? Color.gray.opacity(0.3) : Color.blue)
+                            .cornerRadius(14)
+                            .shadow(color: viewModel.selectedItem == nil ? Color.clear : Color.blue.opacity(0.3), radius: 8, y: 4)
+                        }
+                        .disabled(viewModel.selectedItem == nil)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 40)
+                    .padding(.bottom, 36)
+                    .frame(width: sidebarWidth * 0.40)
+                    .background(Color.white.opacity(0.02))
+                }
+                .frame(width: sidebarWidth)
+                .background(.ultraThinMaterial)
+                
+                // Clear tap-to-dismiss zone
+                Color.black.opacity(0.3)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onClose()
+                    }
+            }
+            .frame(width: geo.size.width)
+            .ignoresSafeArea(.all, edges: .vertical)
+        }
+    }
+}
+
+#Preview {
+    ZStack(alignment: .leading) {
+        Color.black.ignoresSafeArea()
+        CatalogSidebarView(
+            selectedObjectType: .constant(.ergonomicChair),
+            selectedCategory: .constant(.furniture),
+            onPlaceItem: { _ in },
+            onClose: {}
+        )
+    }
+}
