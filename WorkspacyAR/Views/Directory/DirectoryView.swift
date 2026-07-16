@@ -11,6 +11,7 @@ import Combine
 
 struct DirectoryView: View {
     @State private var viewModel = DirectoryViewModel()
+    var onPlaceItem: ((DeskItem) -> Void)? = nil
 
     var body: some View {
         GeometryReader { geo in
@@ -38,7 +39,11 @@ struct DirectoryView: View {
                 .navigationTitle("Directory")
                 .navigationSplitViewColumnWidth(geo.size.width * 0.50)
             } detail: {
-                PreviewPanel(item: viewModel.selectedItem)
+                PreviewPanel(item: viewModel.selectedItem, onPlace: {
+                    if let item = viewModel.selectedItem {
+                        onPlaceItem?(item)
+                    }
+                })
             }
             .navigationSplitViewStyle(.balanced)
         }
@@ -75,6 +80,7 @@ struct DeskItemCard: View {
 
 struct PreviewPanel: View {
     let item: DeskItem?
+    var onPlace: (() -> Void)? = nil
 
     var body: some View {
         ZStack {
@@ -94,7 +100,7 @@ struct PreviewPanel: View {
                 HStack {
                     Spacer()
                     Button {
-                        // TODO: AR placement logic
+                        onPlace?()
                     } label: {
                         Text("Place")
                             .frame(width: 150, height: 44)
