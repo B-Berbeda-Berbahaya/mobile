@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -19,7 +20,12 @@ struct ContentView: View {
                 }
                 .tag(1)
         }
-        .accentColor(.blue)
+        .accentColor(themeBrown)
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SwitchToDashboard"))) { _ in
+            withAnimation {
+                selectedTab = 0
+            }
+        }
     }
 }
 

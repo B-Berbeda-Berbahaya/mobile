@@ -1,70 +1,89 @@
-//
-//  GuideObjectView.swift
-//  WorkspacyAR
-//
-//  Created by Mochammad Athar Humam Ghazanfar on 15/07/26.
-//
-
 import SwiftUI
 
 struct GuideObjectView: View {
     let onDismiss: (() -> Void)
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @StateObject private var viewModel = GuideViewModel()
+    let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     
     var body: some View {
-        ZStack{
-            
-            GeometryReader { geo in
-                ZStack{
-                    Color.black
-                        .opacity(0.45)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 61)
-                    {
-                        Text("How to use the object")
-                            .font(.system(size: 50, weight: .medium))
-                        HStack(spacing: 105){
-                            Image("1finger")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 130, height: 200)
-                            Text("1 Finger = Move Object")
-                                .font(.system(size: 30, weight: .regular))
-                        }
-                        HStack(spacing: 105){
-                            Image("2finger")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 130, height: 200)
-                            Text("1 Finger = Move Object")
-                                .font(.system(size: 30, weight: .regular))
-                        }
-                        HStack(spacing: 105){
-                            Image("3finger")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 130, height: 200)
-                            Text("1 Finger = Move Object")
-                                .font(.system(size: 30, weight: .regular))
-                        }
-                        Button {
-                            onDismiss()
-                        } label: {
-                            Text("Understood")
-                                .font(.system(size: 26, weight: .regular))
-                                .frame(width: 180, height: 44)
-                        }
-                        .buttonStyle(.borderedProminent)
-                       
-                    }
-                    .foregroundStyle(Color.white)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.all, )
-                }
+        ZStack {
+            // Dark glassmorphic background overlay
+            Color.black.opacity(0.7)
                 .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                Spacer()
+                
+                Text("How to Control Objects")
+                    .font(.system(.headline, design: .rounded))
+                    .fontWeight(.bold)
+                    .padding(.top, 16)
+                
+                VStack(spacing: 10) {
+                    ForEach(viewModel.gestureItems) { item in
+                        GestureGuideRow(imageName: item.imageName, title: item.title, description: item.description)
+                    }
+                }
+                .padding(.horizontal, 16)
+                
+                Spacer()
+                
+                Button(action: onDismiss) {
+                    Text("Understood")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(themeBrown)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 36)
+                .padding(.bottom, 130)
             }
-
+            .foregroundStyle(Color.white)
+            .padding(.top, horizontalSizeClass == .compact ? 60 : 20)
+            .adaptiveCardModal(isRegular: horizontalSizeClass == .regular, width: 460, height: 560)
         }
+    }
+}
+
+struct GestureGuideRow: View {
+    let imageName: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 46, height: 60)
+                
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 44)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text(description)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Spacer()
+        }
+        .padding(8)
+        .background(Color.white.opacity(0.03))
+        .cornerRadius(12)
     }
 }
 
