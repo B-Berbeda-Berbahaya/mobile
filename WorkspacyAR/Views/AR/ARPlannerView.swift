@@ -27,11 +27,18 @@ struct ARPlannerView: View {
     @State private var showDebugGrid = true
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
-    @State private var popoverPosition: CGPoint = .zero
-    @State private var interactionMode: ARInteractionMode = .none
+    @State private var showSidebar = false
+    @State private var showSuccessScreen = false
+    
+    enum OnboardingStep {
+        case scanningGuide
+        case objectGuide
+        case completed
+    }
+    @State private var onboardingStep: OnboardingStep = .scanningGuide
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .leading) {
             // Background Canvas (AR or Interactive Grid)
             if isARMode {
                 ZStack {
@@ -73,8 +80,12 @@ struct ARPlannerView: View {
                     isARMode: $isARMode,
                     showDebugGrid: $showDebugGrid,
                     sessionState: sessionState,
+                    showSidebar: $showSidebar,
                     onClear: {
                         clearWorkspace()
+                    },
+                    onFinish: {
+                        showSuccessScreen = true
                     }
                 )
                 
@@ -83,22 +94,16 @@ struct ARPlannerView: View {
                 // Bottom control panel (Picker or Adjuster)
                 if selectedObject == nil {
                     VStack(spacing: 8) {
-                        ObjectPickerCarousel(
-                            selectedObjectType: $selectedObjectType,
-                            selectedCategory: $selectedCategory
-                        )
-                        .onChange(of: selectedObjectType) { _, newType in
-                            coordinator?.activePlacingType = newType
-                        }
-                        
                         Text(isARMode ? "Tap surface to place \(selectedObjectType.displayName)" : "Tap table cell to place \(selectedObjectType.displayName)")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .padding(.bottom, 6)
+                            .foregroundColor(.white.opacity(0.9))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.black.opacity(0.6))
+                            .cornerRadius(10)
+                            .padding(.bottom, 16)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 16)
-                    .transition(.move(edge: .bottom))
+                    .transition(.opacity)
                 } else {
                     if let object = selectedObject {
                         AdjustItemPopover(
@@ -124,25 +129,49 @@ struct ARPlannerView: View {
                     }
                 }
             }
-        }
-        .onAppear {
-            initializeCoordinator()
-        }
-        .onChange(of: selectedObject) { _, newObj in
-            if let newObj = newObj {
-                if coordinator?.selectedPlacedObject?.id != newObj.id {
-                    if let obj = coordinator?.anchorManager.placedObjects.first(where: { $0.id == newObj.id }) {
-                        coordinator?.selectObject(obj)
+            
+            // Sliding Sidebar Drawer
+            if showSidebar {
+                CatalogSidebarView(
+                    selectedObjectType: $selectedObjectType,
+                    selectedCategory: $selectedCategory,
+                    onPlaceItem: { item in
+                        selectedObjectType = mapDeskItemToObjectType(item)
+                        selectedCategory = selectedObjectType.category
+                        withAnimation { showSidebar = false }
+                    },
+                    onClose: {
+                        withAnimation { showSidebar = false }
                     }
-                }
-            } else {
-                if coordinator?.selectedPlacedObject != nil {
-                    coordinator?.deselectCurrentObject()
-                }
+                )
+                .transition(.move(edge: .leading))
+                .zIndex(10)
+            }
+            
+            // Onboarding Guide Overlay
+            if onboardingStep == .scanningGuide {
+                GuideScanningView(onDismiss: {
+                    withAnimation { onboardingStep = .objectGuide }
+                })
+                .transition(.opacity)
+                .zIndex(20)
+            } else if onboardingStep == .objectGuide {
+                GuideObjectView(onDismiss: {
+                    withAnimation { onboardingStep = .completed }
+                })
+                .transition(.opacity)
+                .zIndex(20)
             }
         }
-        .onChange(of: interactionMode) { _, newMode in
-            coordinator?.interactionMode = newMode
+        .onAppear {
+            onboardingStep = .scanningGuide
+            initializeCoordinator()
+        }
+        .fullScreenCover(isPresented: $showSuccessScreen) {
+            LayoutSuccessView(placedObjects: placedObjects, onSaveAndExit: {
+                showSuccessScreen = false
+                NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
+            })
         }
     }
     
@@ -276,6 +305,18 @@ struct ARPlannerView: View {
         selectedObject = nil
         sessionState = "Removed \(obj.type.displayName)"
     }
+    
+    private func mapDeskItemToObjectType(_ item: DeskItem) -> PlaceableObjectType {
+        let name = item.name.lowercased()
+        if name.contains("monitor") {
+            return .monitor34
+        } else if name.contains("vase") || name.contains("pot") || name.contains("plant") {
+            return .plant
+        } else if name.contains("organizer") || name.contains("case") || name.contains("pouch") {
+            return .keyboard
+        }
+        return .ergonomicChair
+    }
 }
 
 // Sub-component: Planner toolbar header
@@ -283,7 +324,9 @@ struct PlannerToolbar: View {
     @Binding var isARMode: Bool
     @Binding var showDebugGrid: Bool
     let sessionState: String
+    @Binding var showSidebar: Bool
     var onClear: () -> Void
+    var onFinish: () -> Void
     
     var body: some View {
         HStack {
@@ -312,6 +355,17 @@ struct PlannerToolbar: View {
             Spacer()
             
             HStack(spacing: 8) {
+                Button(action: {
+                    withAnimation { showSidebar.toggle() }
+                }) {
+                    Image(systemName: "sidebar.left")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
+                        .clipShape(Circle())
+                }
+                
                 Button(action: {
                     withAnimation { showDebugGrid.toggle() }
                 }) {
@@ -342,6 +396,15 @@ struct PlannerToolbar: View {
                         .foregroundColor(.red)
                         .clipShape(Circle())
                 }
+                
+                Button(action: onFinish) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
+                        .clipShape(Circle())
+                }
             }
             .shadow(color: Color.black.opacity(0.05), radius: 5)
         }
@@ -358,53 +421,69 @@ struct SimulatedGridCanvas: View {
     let onCellTapped: (Int, Int) -> Void
     
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(red: 0.16, green: 0.18, blue: 0.22), Color(red: 0.11, green: 0.12, blue: 0.15)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            
-            VStack {
-                Spacer()
+        GeometryReader { geo in
+            ZStack {
+                LinearGradient(
+                    colors: [Color(red: 0.16, green: 0.18, blue: 0.22), Color(red: 0.11, green: 0.12, blue: 0.15)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
                 
-                VStack(spacing: 2) {
-                    ForEach(Array(stride(from: 2, through: -2, by: -1)), id: \.self) { z in
-                        HStack(spacing: 2) {
-                            ForEach(-4...4, id: \.self) { x in
-                                CellButton(
-                                    x: x,
-                                    z: z,
-                                    placedObject: placedObjects.first(where: { $0.gridX == x && $0.gridZ == z }),
-                                    isSelected: selectedObject?.gridX == x && selectedObject?.gridZ == z,
-                                    showDebug: showDebugGrid,
-                                    onTap: {
-                                        onCellTapped(x, z)
-                                    }
-                                )
+                VStack {
+                    Spacer()
+                    
+                    let scale: CGFloat = geo.size.width < 400 ? (geo.size.width / 400.0) : 0.95
+                    
+                    VStack(spacing: 2) {
+                        ForEach(Array(stride(from: 2, through: -2, by: -1)), id: \.self) { z in
+                            HStack(spacing: 2) {
+                                ForumCellBuilder(z: z, placedObjects: $placedObjects, selectedObject: $selectedObject, showDebugGrid: showDebugGrid, onCellTapped: onCellTapped)
                             }
                         }
                     }
+                    .padding(16)
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                    .rotation3DEffect(
+                        .degrees(35),
+                        axis: (x: 1.0, y: 0.0, z: 0.0),
+                        anchor: .center,
+                        perspective: 0.5
+                    )
+                    .scaleEffect(scale)
+                    .offset(y: -40)
+                    
+                    Spacer()
                 }
-                .padding(20)
-                .background(Color.white.opacity(0.04))
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-                .rotation3DEffect(
-                    .degrees(35),
-                    axis: (x: 1.0, y: 0.0, z: 0.0),
-                    anchor: .center,
-                    perspective: 0.5
-                )
-                .scaleEffect(0.9)
-                .offset(y: -40)
-                
-                Spacer()
             }
+        }
+    }
+}
+
+struct ForumCellBuilder: View {
+    let z: Int
+    @Binding var placedObjects: [PlacedObjectSim]
+    @Binding var selectedObject: PlacedObjectSim?
+    let showDebugGrid: Bool
+    let onCellTapped: (Int, Int) -> Void
+    
+    var body: some View {
+        ForEach(-4...4, id: \.self) { x in
+            CellButton(
+                x: x,
+                z: z,
+                placedObject: placedObjects.first(where: { $0.gridX == x && $0.gridZ == z }),
+                isSelected: selectedObject?.gridX == x && selectedObject?.gridZ == z,
+                showDebug: showDebugGrid,
+                onTap: {
+                    onCellTapped(x, z)
+                }
+            )
         }
     }
 }
@@ -423,13 +502,13 @@ struct CellButton: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
-                        isSelected ? Color.blue.opacity(0.3) :
+                        isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28).opacity(0.3) :
                         (placedObject != nil ? Color.white.opacity(0.08) : Color.white.opacity(0.02))
                     )
                     .frame(width: 38, height: 38)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.blue : Color.white.opacity(0.1), lineWidth: 1)
+                            .stroke(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : Color.white.opacity(0.1), lineWidth: 1)
                     )
                 
                 if showDebug && placedObject == nil {
@@ -442,7 +521,7 @@ struct CellButton: View {
                     VStack {
                         Image(systemName: obj.type.sfSymbol)
                             .font(.system(size: 16))
-                            .foregroundColor(isSelected ? .blue : .white)
+                            .foregroundColor(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : .white)
                             .rotationEffect(.degrees(Double(obj.rotation)))
                             .scaleEffect(isSelected ? 1.2 : 1.0)
                             .animation(.spring(), value: isSelected)

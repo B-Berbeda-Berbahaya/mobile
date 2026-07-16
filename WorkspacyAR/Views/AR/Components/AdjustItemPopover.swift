@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AdjustItemPopover: View {
     let objectType: PlaceableObjectType
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     // Sliders & settings states
     @State private var rotationAngle: Float = 0.0 // in degrees
@@ -256,6 +257,7 @@ struct AdjustItemPopover: View {
         .background(Color(.systemGroupedBackground))
         .cornerRadius(24)
         .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: -4)
+        .adaptiveWidth(isRegular: horizontalSizeClass == .regular, maxWidth: 500)
     }
     
     private var categoryColor: Color {
