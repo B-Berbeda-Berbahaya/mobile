@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GuideScanningView: View {
     let onDismiss: (() -> Void)
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var body: some View {
         ZStack {
@@ -9,55 +10,60 @@ struct GuideScanningView: View {
             Color.black.opacity(0.7)
                 .ignoresSafeArea()
             
-            VStack(spacing: 28) {
+            VStack(spacing: 16) {
                 Spacer()
                 
-                VStack(spacing: 8) {
+                VStack(spacing: 6) {
                     Text("Ready to Scan")
-                        .font(.system(.title, design: .rounded))
+                        .font(.system(.title3, design: .rounded))
                         .fontWeight(.bold)
                     
                     Text("Stand up and face your desk surface")
-                        .font(.subheadline)
+                        .font(.caption)
                         .foregroundColor(.white.opacity(0.8))
                 }
                 
-                // Responsive illustration frame
+                // Responsive illustration frame (scaled down for iPhone Portrait)
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24)
+                    RoundedRectangle(cornerRadius: 18)
                         .fill(Color.white.opacity(0.06))
-                        .frame(width: 280, height: 220)
+                        .frame(width: 220, height: 160)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 24)
+                            RoundedRectangle(cornerRadius: 18)
                                 .stroke(Color.white.opacity(0.12), lineWidth: 1)
                         )
                     
                     Image("Scanning")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 240, height: 180)
+                        .frame(width: 180, height: 130)
                 }
                 
                 Text("Hold your device at chest height and slowly move it side-to-side to detect the surface.")
-                    .font(.body)
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .lineSpacing(4)
+                    .padding(.horizontal, 24)
+                    .lineSpacing(3)
                 
                 Spacer()
                 
                 Button(action: onDismiss) {
                     Text("Understood")
-                        .font(.headline)
+                        .font(.subheadline)
+                        .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .frame(width: 220, height: 50)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
                         .background(Color.blue)
-                        .cornerRadius(14)
+                        .cornerRadius(12)
                 }
-                .padding(.bottom, 70)
+                .padding(.horizontal, 36)
+                .padding(.bottom, 130)
             }
             .foregroundStyle(Color.white)
+            .padding(.top, horizontalSizeClass == .compact ? 60 : 20)
+            .adaptiveCardModal(isRegular: horizontalSizeClass == .regular, width: 460, height: 560)
         }
     }
 }

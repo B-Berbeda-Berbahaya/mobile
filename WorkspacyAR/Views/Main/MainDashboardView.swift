@@ -3,30 +3,61 @@ import SwiftUI
 struct MainDashboardView: View {
     // Callback to open AR Designer tab
     var onOpenARScanner: (() -> Void)? = nil
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header Profile Section
-                DashboardHeaderView()
-                
-                // Ergonomics Circular Ring Score Card
-                ErgonomicsScoreCard()
+            if horizontalSizeClass == .regular {
+                // iPad / Widescreen: 2-Column Split Layout
+                VStack(alignment: .leading, spacing: 24) {
+                    DashboardHeaderView()
+                    
+                    HStack(alignment: .top, spacing: 24) {
+                        // Left Column
+                        VStack(alignment: .leading, spacing: 24) {
+                            LaunchARCard(onAction: {
+                                onOpenARScanner?()
+                            })
+                            
+                            RecentDesignsCarousel()
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // Right Column
+                        VStack(alignment: .leading, spacing: 24) {
+                            ErgonomicsScoreCard()
+                            
+                            QuickTipWidget()
+                        }
+                        .frame(maxWidth: 400)
+                    }
                     .padding(.horizontal)
-                
-                // Launch AR Action Card (Highlighted Card)
-                LaunchARCard(onAction: {
-                    onOpenARScanner?()
-                })
-                .padding(.horizontal)
-                
-                // Recent Designs horizontal carousel
-                RecentDesignsCarousel()
-                
-                // Ergonomic Quick Tip Card
-                QuickTipWidget()
+                }
+                .padding(.bottom, 30)
+            } else {
+                // iPhone / Compact: Vertical stacking
+                VStack(alignment: .leading, spacing: 24) {
+                    // Header Profile Section
+                    DashboardHeaderView()
+                    
+                    // Ergonomics Circular Ring Score Card
+                    ErgonomicsScoreCard()
+                        .padding(.horizontal)
+                    
+                    // Launch AR Action Card (Highlighted Card)
+                    LaunchARCard(onAction: {
+                        onOpenARScanner?()
+                    })
                     .padding(.horizontal)
-                    .padding(.bottom, 20)
+                    
+                    // Recent Designs horizontal carousel
+                    RecentDesignsCarousel()
+                    
+                    // Ergonomic Quick Tip Card
+                    QuickTipWidget()
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+                }
             }
         }
         .background(Color(.systemGroupedBackground))

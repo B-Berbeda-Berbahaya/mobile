@@ -366,53 +366,69 @@ struct SimulatedGridCanvas: View {
     let onCellTapped: (Int, Int) -> Void
     
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(red: 0.16, green: 0.18, blue: 0.22), Color(red: 0.11, green: 0.12, blue: 0.15)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            
-            VStack {
-                Spacer()
+        GeometryReader { geo in
+            ZStack {
+                LinearGradient(
+                    colors: [Color(red: 0.16, green: 0.18, blue: 0.22), Color(red: 0.11, green: 0.12, blue: 0.15)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
                 
-                VStack(spacing: 2) {
-                    ForEach(Array(stride(from: 2, through: -2, by: -1)), id: \.self) { z in
-                        HStack(spacing: 2) {
-                            ForEach(-4...4, id: \.self) { x in
-                                CellButton(
-                                    x: x,
-                                    z: z,
-                                    placedObject: placedObjects.first(where: { $0.gridX == x && $0.gridZ == z }),
-                                    isSelected: selectedObject?.gridX == x && selectedObject?.gridZ == z,
-                                    showDebug: showDebugGrid,
-                                    onTap: {
-                                        onCellTapped(x, z)
-                                    }
-                                )
+                VStack {
+                    Spacer()
+                    
+                    let scale: CGFloat = geo.size.width < 400 ? (geo.size.width / 400.0) : 0.95
+                    
+                    VStack(spacing: 2) {
+                        ForEach(Array(stride(from: 2, through: -2, by: -1)), id: \.self) { z in
+                            HStack(spacing: 2) {
+                                ForumCellBuilder(z: z, placedObjects: $placedObjects, selectedObject: $selectedObject, showDebugGrid: showDebugGrid, onCellTapped: onCellTapped)
                             }
                         }
                     }
+                    .padding(16)
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                    .rotation3DEffect(
+                        .degrees(35),
+                        axis: (x: 1.0, y: 0.0, z: 0.0),
+                        anchor: .center,
+                        perspective: 0.5
+                    )
+                    .scaleEffect(scale)
+                    .offset(y: -40)
+                    
+                    Spacer()
                 }
-                .padding(20)
-                .background(Color.white.opacity(0.04))
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-                .rotation3DEffect(
-                    .degrees(35),
-                    axis: (x: 1.0, y: 0.0, z: 0.0),
-                    anchor: .center,
-                    perspective: 0.5
-                )
-                .scaleEffect(0.9)
-                .offset(y: -40)
-                
-                Spacer()
             }
+        }
+    }
+}
+
+struct ForumCellBuilder: View {
+    let z: Int
+    @Binding var placedObjects: [PlacedObjectSim]
+    @Binding var selectedObject: PlacedObjectSim?
+    let showDebugGrid: Bool
+    let onCellTapped: (Int, Int) -> Void
+    
+    var body: some View {
+        ForEach(-4...4, id: \.self) { x in
+            CellButton(
+                x: x,
+                z: z,
+                placedObject: placedObjects.first(where: { $0.gridX == x && $0.gridZ == z }),
+                isSelected: selectedObject?.gridX == x && selectedObject?.gridZ == z,
+                showDebug: showDebugGrid,
+                onTap: {
+                    onCellTapped(x, z)
+                }
+            )
         }
     }
 }
