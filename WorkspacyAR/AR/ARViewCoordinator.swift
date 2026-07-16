@@ -44,11 +44,11 @@ public final class ARViewCoordinator: NSObject {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         arView.addGestureRecognizer(tapGesture)
         
-        // Height gesture (Two-finger pan)
-        let twoFingerPan = UIPanGestureRecognizer(target: self, action: #selector(handleTwoFingerPan(_:)))
-        twoFingerPan.minimumNumberOfTouches = 2
-        twoFingerPan.maximumNumberOfTouches = 2
-        arView.addGestureRecognizer(twoFingerPan)
+        // Height gesture (Three-finger pan)
+        let threeFingerPan = UIPanGestureRecognizer(target: self, action: #selector(handleThreeFingerPan(_:)))
+        threeFingerPan.minimumNumberOfTouches = 3
+        threeFingerPan.maximumNumberOfTouches = 3
+        arView.addGestureRecognizer(threeFingerPan)
         
         // Scene update subscription (keep objects upright, etc.)
         updateSubscription = arView.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in
@@ -211,7 +211,7 @@ public final class ARViewCoordinator: NSObject {
         notifyObjectUpdate(placedObj)
     }
     
-    @objc public func handleTwoFingerPan(_ sender: UIPanGestureRecognizer) {
+    @objc public func handleThreeFingerPan(_ sender: UIPanGestureRecognizer) {
         guard let arView = arView,
               let placedObj = selectedPlacedObject else { return }
         
@@ -302,7 +302,7 @@ public final class ARViewCoordinator: NSObject {
                 translationGesture.isEnabled = (interactionMode == .move)
             } else if let rotationGesture = gesture as? EntityRotationGestureRecognizer {
                 rotationGesture.isEnabled = (interactionMode == .rotate)
-            } else if let panGesture = gesture as? UIPanGestureRecognizer, panGesture.minimumNumberOfTouches == 2 {
+            } else if let panGesture = gesture as? UIPanGestureRecognizer, panGesture.minimumNumberOfTouches == 3 {
                 panGesture.isEnabled = (interactionMode == .move)
             }
         }

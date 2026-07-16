@@ -28,7 +28,10 @@ struct ARPlannerView: View {
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
     @State private var showSidebar = false
+    @State private var popoverPosition: CGPoint = .zero
+    @State private var interactionMode: ARInteractionMode = .none
     @State private var showSuccessScreen = false
+    @State private var showClearConfirmation = false
     
     enum OnboardingStep {
         case scanningGuide
@@ -82,7 +85,7 @@ struct ARPlannerView: View {
                     sessionState: sessionState,
                     showSidebar: $showSidebar,
                     onClear: {
-                        clearWorkspace()
+                        showClearConfirmation = true
                     },
                     onFinish: {
                         showSuccessScreen = true
@@ -162,6 +165,65 @@ struct ARPlannerView: View {
                 .transition(.opacity)
                 .zIndex(20)
             }
+            
+            // Custom Confirmation Alert Overlay (Pure SwiftUI to avoid UIKit representable touch bugs)
+            if showClearConfirmation {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .onTapGesture {
+                            withAnimation { showClearConfirmation = false }
+                        }
+                    
+                    VStack(spacing: 20) {
+                        Text("Clear Workspace?")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Are you sure you want to remove all placed objects? This action cannot be undone.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                            }) {
+                                Text("Cancel")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                                clearWorkspace()
+                            }) {
+                                Text("Clear All")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.red)
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(24)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(radius: 10)
+                    .padding(.horizontal, 30)
+                    .frame(maxWidth: 340)
+                }
+                .ignoresSafeArea()
+                .zIndex(100)
+                .transition(.opacity.combined(with: .scale))
+            }
         }
         .onAppear {
             onboardingStep = .scanningGuide
@@ -172,6 +234,22 @@ struct ARPlannerView: View {
                 showSuccessScreen = false
                 NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
             })
+        }
+        .onChange(of: selectedObject) { _, newObj in
+            if let newObj = newObj {
+                if coordinator?.selectedPlacedObject?.id != newObj.id {
+                    if let obj = coordinator?.anchorManager.placedObjects.first(where: { $0.id == newObj.id }) {
+                        coordinator?.selectObject(obj)
+                    }
+                }
+            } else {
+                if coordinator?.selectedPlacedObject != nil {
+                    coordinator?.deselectCurrentObject()
+                }
+            }
+        }
+        .onChange(of: interactionMode) { _, newMode in
+            coordinator?.interactionMode = newMode
         }
     }
     
