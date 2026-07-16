@@ -19,9 +19,13 @@ extension View {
         if isRegular {
             self
                 .frame(width: width, height: height)
-                .background(Color(.secondarySystemGroupedBackground).opacity(0.85))
+                .background(Color(red: 0.13, green: 0.12, blue: 0.11)) // Premium warm dark wood background
                 .cornerRadius(28)
-                .shadow(color: Color.black.opacity(0.2), radius: 30, x: 0, y: 15)
+                .shadow(color: Color.black.opacity(0.35), radius: 30, x: 0, y: 15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         } else {
             self

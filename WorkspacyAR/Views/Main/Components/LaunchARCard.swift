@@ -5,75 +5,62 @@ struct LaunchARCard: View {
     
     var body: some View {
         Button(action: onAction) {
-            ZStack(alignment: .bottomLeading) {
-                // Background Gradient with subtle glow
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(LinearGradient(
-                        colors: [Color(red: 0.25, green: 0.35, blue: 0.95), Color(red: 0.55, green: 0.2, blue: 0.85)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(height: 190)
-                    .shadow(color: Color(red: 0.25, green: 0.35, blue: 0.95).opacity(0.35), radius: 15, x: 0, y: 8)
-                
-                // Abstract background shapes
-                VStack {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "arkit")
-                            .font(.system(size: 130))
-                            .foregroundColor(.white.opacity(0.1))
-                            .rotationEffect(.degrees(-10))
-                            .offset(x: 15, y: -10)
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 6) {
+                    Image(systemName: "sofa.fill")
+                        .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.38))
+                        .font(.caption2)
+                    Text("Deskscape")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(Color(red: 0.55, green: 0.48, blue: 0.38))
+                        .tracking(2)
                     Spacer()
                 }
-                .frame(height: 190)
-                .clipped()
                 
-                // Content
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "sparkles")
-                            .foregroundColor(.yellow)
-                            .font(.caption)
-                        Text("WORKSPACE DESIGNER")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white.opacity(0.85))
-                            .tracking(2)
-                    }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Interactive AR Studio")
+                        .font(.system(size: 22, weight: .bold, design: .serif))
+                        .foregroundColor(Color(red: 0.22, green: 0.20, blue: 0.18))
                     
-                    Text("Launch AR Studio")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                    Text("Calibrate your desk dimensions and arrange ergonomic seating, displays, and storage to fit your body.")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(red: 0.40, green: 0.37, blue: 0.34))
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                
+                HStack(spacing: 6) {
+                    Text("Configure Space")
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Scan your physical desk surface in 3D to place virtual monitors, chairs, and customize ergonomics.")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.9))
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(2)
-                        .lineSpacing(2)
-                        .padding(.trailing, 40)
-                    
-                    Spacer()
-                    
-                    HStack {
-                        Text("Start Scanning")
-                            .fontWeight(.bold)
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.subheadline)
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(Color(red: 0.25, green: 0.35, blue: 0.95))
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(Color.white)
-                    .cornerRadius(14)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4)
+                    Image(systemName: "arrow.up.and.down.and.sparkles")
+                        .font(.caption2)
+                        .foregroundColor(.white)
                 }
-                .padding(24)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color(red: 0.45, green: 0.38, blue: 0.28))
+                .cornerRadius(8)
             }
-            .frame(height: 190)
+            .padding(20)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(LinearGradient(
+                            colors: [Color(red: 0.95, green: 0.93, blue: 0.90), Color(red: 0.88, green: 0.84, blue: 0.78)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                    
+                    // Decorative minimalist wood rings
+                    Circle()
+                        .stroke(Color(red: 0.65, green: 0.58, blue: 0.48).opacity(0.1), lineWidth: 1)
+                        .frame(width: 220, height: 220)
+                        .offset(x: 130, y: -10)
+                }
+            )
+            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -82,4 +69,5 @@ struct LaunchARCard: View {
 #Preview {
     LaunchARCard(onAction: {})
         .padding()
+        .background(Color.white)
 }

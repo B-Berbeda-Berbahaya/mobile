@@ -28,6 +28,7 @@ struct ARPlannerView: View {
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
     @State private var showSidebar = false
+    @State private var showSuccessScreen = false
     
     enum OnboardingStep {
         case scanningGuide
@@ -77,6 +78,9 @@ struct ARPlannerView: View {
                     showSidebar: $showSidebar,
                     onClear: {
                         clearWorkspace()
+                    },
+                    onFinish: {
+                        showSuccessScreen = true
                     }
                 )
                 
@@ -156,6 +160,12 @@ struct ARPlannerView: View {
         .onAppear {
             onboardingStep = .scanningGuide
             initializeCoordinator()
+        }
+        .fullScreenCover(isPresented: $showSuccessScreen) {
+            LayoutSuccessView(placedObjects: placedObjects, onSaveAndExit: {
+                showSuccessScreen = false
+                NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
+            })
         }
     }
     
@@ -281,6 +291,7 @@ struct PlannerToolbar: View {
     let sessionState: String
     @Binding var showSidebar: Bool
     var onClear: () -> Void
+    var onFinish: () -> Void
     
     var body: some View {
         HStack {
@@ -316,7 +327,7 @@ struct PlannerToolbar: View {
                         .font(.title3)
                         .padding(8)
                         .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(showSidebar ? .blue : .primary)
+                        .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
                         .clipShape(Circle())
                 }
                 
@@ -348,6 +359,15 @@ struct PlannerToolbar: View {
                         .padding(8)
                         .background(Color(.systemBackground).opacity(0.85))
                         .foregroundColor(.red)
+                        .clipShape(Circle())
+                }
+                
+                Button(action: onFinish) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
                         .clipShape(Circle())
                 }
             }
@@ -447,13 +467,13 @@ struct CellButton: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
-                        isSelected ? Color.blue.opacity(0.3) :
+                        isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28).opacity(0.3) :
                         (placedObject != nil ? Color.white.opacity(0.08) : Color.white.opacity(0.02))
                     )
                     .frame(width: 38, height: 38)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.blue : Color.white.opacity(0.1), lineWidth: 1)
+                            .stroke(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : Color.white.opacity(0.1), lineWidth: 1)
                     )
                 
                 if showDebug && placedObject == nil {
@@ -466,7 +486,7 @@ struct CellButton: View {
                     VStack {
                         Image(systemName: obj.type.sfSymbol)
                             .font(.system(size: 16))
-                            .foregroundColor(isSelected ? .blue : .white)
+                            .foregroundColor(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : .white)
                             .rotationEffect(.degrees(Double(obj.rotation)))
                             .scaleEffect(isSelected ? 1.2 : 1.0)
                             .animation(.spring(), value: isSelected)

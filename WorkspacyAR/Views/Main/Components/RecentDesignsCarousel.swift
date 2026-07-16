@@ -9,51 +9,53 @@ struct RecentDesignsCarousel: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Designs")
-                .font(.title3)
+            Text("Saved Workspaces")
+                .font(.system(.subheadline, design: .serif))
                 .fontWeight(.bold)
+                .foregroundColor(.secondary)
                 .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(designs) { design in
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 ZStack {
                                     Circle()
-                                        .fill(Color.accentColor.opacity(0.08))
-                                        .frame(width: 36, height: 36)
+                                        .fill(Color(red: 0.45, green: 0.38, blue: 0.28).opacity(0.06))
+                                        .frame(width: 32, height: 32)
                                     
                                     Image(systemName: design.iconName)
-                                        .foregroundColor(.accentColor)
+                                        .font(.caption)
+                                        .foregroundColor(Color(red: 0.45, green: 0.38, blue: 0.28))
                                 }
                                 Spacer()
                                 
-                                HStack(spacing: 3) {
-                                    Image(systemName: "shield.fill")
+                                HStack(spacing: 2) {
+                                    Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 8))
-                                        .foregroundColor(.green)
+                                        .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
+                                    
                                     Text("\(design.ergonomicsScore)%")
-                                        .font(.caption2)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.green)
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
                                 }
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 3)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(6)
+                                .background(Color(red: 0.42, green: 0.55, blue: 0.44).opacity(0.08))
+                                .cornerRadius(4)
                             }
                             
                             Spacer()
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(design.name)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.primary)
                                     .lineLimit(1)
-                                Text("\(design.itemCount) items")
-                                    .font(.caption2)
+                                
+                                Text("\(design.itemCount) item layouts")
+                                    .font(.system(size: 9))
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -61,7 +63,7 @@ struct RecentDesignsCarousel: View {
                         .frame(width: 150, height: 120)
                         .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 2)
+                        .shadow(color: Color.black.opacity(0.015), radius: 5, x: 0, y: 2)
                     }
                 }
                 .padding(.horizontal)
@@ -73,5 +75,6 @@ struct RecentDesignsCarousel: View {
 
 #Preview {
     RecentDesignsCarousel()
+        .padding()
         .background(Color(.systemGroupedBackground))
 }

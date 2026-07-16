@@ -3,6 +3,7 @@ import SwiftUI
 struct GuideScanningView: View {
     let onDismiss: (() -> Void)
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     
     var body: some View {
         ZStack {
@@ -55,7 +56,7 @@ struct GuideScanningView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(Color.blue)
+                        .background(themeBrown)
                         .cornerRadius(12)
                 }
                 .padding(.horizontal, 36)

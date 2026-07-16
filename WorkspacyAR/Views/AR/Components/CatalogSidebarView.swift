@@ -8,6 +8,7 @@ struct CatalogSidebarView: View {
     
     @State private var viewModel = DirectoryViewModel()
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
     
     var body: some View {
         GeometryReader { geo in
@@ -56,12 +57,12 @@ struct CatalogSidebarView: View {
                                                             VStack(spacing: 8) {
                                                                 ZStack {
                                                                     RoundedRectangle(cornerRadius: 12)
-                                                                        .fill(viewModel.selectedItem?.id == item.id ? Color.blue.opacity(0.15) : Color.white.opacity(0.05))
+                                                                        .fill(viewModel.selectedItem?.id == item.id ? themeBrown.opacity(0.15) : Color.white.opacity(0.05))
                                                                         .frame(height: 64)
                                                                     
                                                                     Image(systemName: item.systemImage)
                                                                         .font(.title2)
-                                                                        .foregroundColor(viewModel.selectedItem?.id == item.id ? .blue : .primary)
+                                                                        .foregroundColor(viewModel.selectedItem?.id == item.id ? themeBrown : .primary)
                                                                 }
                                                                 
                                                                 Text(item.name)
@@ -149,9 +150,9 @@ struct CatalogSidebarView: View {
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(viewModel.selectedItem == nil ? Color.gray.opacity(0.3) : Color.blue)
+                                    .background(viewModel.selectedItem == nil ? Color.gray.opacity(0.3) : themeBrown)
                                     .cornerRadius(14)
-                                    .shadow(color: viewModel.selectedItem == nil ? Color.clear : Color.blue.opacity(0.3), radius: 8, y: 4)
+                                    .shadow(color: viewModel.selectedItem == nil ? Color.clear : themeBrown.opacity(0.3), radius: 8, y: 4)
                                 }
                                 .disabled(viewModel.selectedItem == nil)
                             }
@@ -214,12 +215,12 @@ struct CatalogSidebarView: View {
                                                         VStack(spacing: 4) {
                                                             ZStack {
                                                                 RoundedRectangle(cornerRadius: 10)
-                                                                    .fill(viewModel.selectedItem?.id == item.id ? Color.blue.opacity(0.2) : Color.white.opacity(0.05))
+                                                                    .fill(viewModel.selectedItem?.id == item.id ? themeBrown.opacity(0.2) : Color.white.opacity(0.05))
                                                                     .frame(height: 50)
                                                                 
                                                                 Image(systemName: item.systemImage)
                                                                     .font(.body)
-                                                                    .foregroundColor(viewModel.selectedItem?.id == item.id ? .blue : .primary)
+                                                                    .foregroundColor(viewModel.selectedItem?.id == item.id ? themeBrown : .primary)
                                                             }
                                                             
                                                             Text(item.name)
@@ -245,7 +246,7 @@ struct CatalogSidebarView: View {
                                 if let selected = viewModel.selectedItem {
                                     HStack(spacing: 8) {
                                         Image(systemName: selected.systemImage)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(themeBrown)
                                             .font(.footnote)
                                         Text(selected.name)
                                             .font(.caption)
@@ -270,7 +271,7 @@ struct CatalogSidebarView: View {
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 10)
-                                        .background(viewModel.selectedItem == nil ? Color.gray.opacity(0.3) : Color.blue)
+                                        .background(viewModel.selectedItem == nil ? Color.gray.opacity(0.3) : themeBrown)
                                         .cornerRadius(10)
                                 }
                                 .disabled(viewModel.selectedItem == nil)
