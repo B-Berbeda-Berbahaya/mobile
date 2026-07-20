@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		43E5F478300A1866001AC5CC /* Workspacy in Frameworks */ = {isa = PBXBuildFile; productRef = 43E5F477300A1866001AC5CC /* Workspacy */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		3D8F8431300611870080ADB9 /* WorkspacyAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorkspacyAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43E5F478300A1866001AC5CC /* Workspacy in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +38,7 @@
 			isa = PBXGroup;
 			children = (
 				3D8F8433300611870080ADB9 /* WorkspacyAR */,
+				43E5F474300A1821001AC5CC /* Frameworks */,
 				3D8F8432300611870080ADB9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +49,13 @@
 				3D8F8431300611870080ADB9 /* WorkspacyAR.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		43E5F474300A1821001AC5CC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -250,8 +263,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = 7MXYL2ADGX;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = HTVP7V7U6H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Workspacy AR";
@@ -347,6 +360,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		43E5F477300A1866001AC5CC /* Workspacy */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Workspacy;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3D8F8429300611870080ADB9 /* Project object */;
 }

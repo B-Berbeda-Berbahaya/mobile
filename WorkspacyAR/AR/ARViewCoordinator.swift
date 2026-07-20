@@ -108,99 +108,6 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         }
     }
     
-    // MARK: - Triggers (Called from SwiftUI)
-    
-    public func addPointAtFocus() {
-        guard let arView = arView, let focusPos = stateManager.focus3DPosition else { return }
-        
-        let anchor: AnchorEntity
-        if let existing = self.deskAnchor {
-            anchor = existing
-        } else {
-            anchor = AnchorEntity()
-            self.deskAnchor = anchor
-            arView.scene.addAnchor(anchor)
-        }
-        
-        let index = stateManager.calibrationPoints.count
-        let targetY = stateManager.calibrationPoints.first?.y ?? focusPos.y
-        let flatPos = SIMD3<Float>(focusPos.x, targetY, focusPos.z)
-        
-        let handleMesh = MeshResource.generateSphere(radius: 0.015)
-        let handleMaterial = SimpleMaterial(color: .green, isMetallic: false)
-        let handleEntity = ModelEntity(mesh: handleMesh, materials: [handleMaterial])
-        
-        handleEntity.name = "handle_\(index)"
-        handleEntity.position = flatPos
-        
-        handleEntity.generateCollisionShapes(recursive: true)
-        arView.installGestures(.translation, for: handleEntity)
-        
-        anchor.addChild(handleEntity)
-        
-        DispatchQueue.main.async {
-            self.stateManager.calibrationPoints.append(flatPos)
-            self.stateManager.isDeskDetected = true
-        }
-    }
-    
-    public func removeLastPoint() {
-        guard let anchor = deskAnchor, !stateManager.calibrationPoints.isEmpty else { return }
-        let indexToRemove = stateManager.calibrationPoints.count - 1
-        
-        if let handle = anchor.findEntity(named: "handle_\(indexToRemove)") {
-            handle.removeFromParent()
-        }
-        
-        DispatchQueue.main.async {
-            self.stateManager.calibrationPoints.removeLast()
-            if self.stateManager.calibrationPoints.isEmpty {
-                self.stateManager.isDeskDetected = false
-            }
-        }
-    }
-    
-    public func resetCalibration() {
-        if let anchor = deskAnchor {
-            anchor.removeFromParent()
-            self.deskAnchor = nil
-        }
-        if let rAnchor = reticleAnchor {
-            rAnchor.removeFromParent()
-            self.reticleAnchor = nil
-            self.reticleEntity = nil
-        }
-        
-        DispatchQueue.main.async {
-            self.stateManager.calibrationPoints.removeAll()
-            self.stateManager.isDeskDetected = false
-            self.stateManager.isDeskLocked = false
-        }
-    }
-    
-    public func updateHandlesVisibility(isLocked: Bool) {
-        guard let anchor = deskAnchor else { return }
-        let pointsCount = stateManager.calibrationPoints.count
-        
-        for i in 0..<pointsCount {
-            if let handle = anchor.findEntity(named: "handle_\(i)") {
-                handle.isEnabled = !isLocked
-            }
-        }
-        
-        if let deskModel = anchor.findEntity(named: "desk_model") as? ModelEntity {
-            if isLocked {
-                deskModel.generateCollisionShapes(recursive: true)
-                deskModel.components.set(PhysicsBodyComponent(massProperties: .init(mass: 0.0), material: .default, mode: .static))
-            } else {
-                deskModel.components.remove(PhysicsBodyComponent.self)
-                deskModel.components.remove(CollisionComponent.self)
-            }
-        }
-    }
-    
-    // MARK: - Tap & Place
-    
     @objc public func handleTap(_ recognizer: UITapGestureRecognizer) {
         guard let arView = arView else { return }
         let location = recognizer.location(in: arView)
@@ -519,8 +426,6 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
                     planeName = "Desk"
                 case .floor:
                     planeName = "Floor"
-                case .seat:
-                    planeName = "Chair"
                 default:
                     planeName = "Flat Surface"
                 }

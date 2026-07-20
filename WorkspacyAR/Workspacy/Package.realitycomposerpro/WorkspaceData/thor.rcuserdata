@@ -1,0 +1,66 @@
+{
+  "advancedEditorSelectedIdentifier" : "ProjectBrowser",
+  "openSceneRelativePaths" : [
+    "World.usda"
+  ],
+  "recentIdentifiers" : {
+    "2075884B-D127-4458-87B2-475B7B399065" : [
+
+    ],
+    "AF3680C1-CA75-492D-AB59-525E97BC01D6" : [
+
+    ]
+  },
+  "sceneCameraHistory" : {
+    "AF3680C1-CA75-492D-AB59-525E97BC01D6" : [
+      {
+        "date" : 806023629.046951,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          0.2933573,
+          1.6447581,
+          2.0128226,
+          1
+        ]
+      },
+      {
+        "date" : 805965170.465565,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          0.2933573,
+          1.6447581,
+          2.0128226,
+          1
+        ]
+      }
+    ]
+  },
+  "sceneViewportBackgroundColors" : {
+
+  },
+  "selectedSceneRelativePath" : "World.usda"
+}

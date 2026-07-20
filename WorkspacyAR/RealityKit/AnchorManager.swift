@@ -34,4 +34,4 @@ public final class AnchorManager {
         }
         placedObjects.removeAll()
     }
-}
+} 

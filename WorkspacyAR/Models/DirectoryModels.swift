@@ -7,40 +7,30 @@
 
 import Foundation
 
-struct DeskItem: Identifiable, Hashable, Codable {
-    var id = UUID()
-    let name: String
-    let systemImage: String          // SF Symbol name, placeholder until real thumbnails exist
-    var modelFileName: String? = nil // TODO: USDZ filename once assets exist
+import Foundation
 
-    static let example = DeskItem(name: "Monitor", systemImage: "display")
+struct DeskItem: Identifiable, Hashable {
+    var id: String { objectType.id }
+    let objectType: PlaceableObjectType
+    
+    var name: String { objectType.displayName }
+    var systemImage: String { objectType.sfSymbol }
+    var modelFileName: String { objectType.assetName }
 }
 
-struct DeskItemSection: Identifiable, Hashable, Codable {
-    var id = UUID()
+struct DeskItemSection: Identifiable, Hashable {
+    var id: String { title }
     let title: String
     let items: [DeskItem]
-
-    static let mockData: [DeskItemSection] = [
-        DeskItemSection(title: "Monitor", items: [
-            DeskItem(name: "27\" LED Monitor", systemImage: "display"),
-            DeskItem(name: "Desktop Monitor", systemImage: "desktopcomputer"),
-            DeskItem(name: "Portable Monitor", systemImage: "display")
-        ]),
-        DeskItemSection(title: "Flower Vase", items: [
-            DeskItem(name: "Ceramic Vase", systemImage: "leaf"),
-            DeskItem(name: "Glass Vase", systemImage: "leaf.fill"),
-            DeskItem(name: "Small Pot", systemImage: "drop.fill")
-        ]),
-        DeskItemSection(title: "Pencil Case", items: [
-            DeskItem(name: "Zip Pouch", systemImage: "pencil"),
-            DeskItem(name: "Desk Organizer", systemImage: "tray.full.fill"),
-            DeskItem(name: "Roll-Up Case", systemImage: "ruler.fill")
-        ])
-    ]
+    
+    static let catalog: [DeskItemSection] = {
+        let grouped = Dictionary(grouping: PlaceableObjectType.allCases) { $0.category }
+        return ItemCategory.allCases.compactMap { category in
+            guard let types = grouped[category], !types.isEmpty else { return nil }
+            return DeskItemSection(
+                title: category.rawValue,
+                items: types.map { DeskItem(objectType: $0) }
+            )
+        }
+    }()
 }
-
-//DeskItemSection(title: "Monitor", items: [
-//    DeskItem(name: "27\" LED Monitor", systemImage: "display", modelFileName: "monitor_led_27in.usdz"),
-//    // same pattern for the rest — just add modelFileName to each existing item
-//])
