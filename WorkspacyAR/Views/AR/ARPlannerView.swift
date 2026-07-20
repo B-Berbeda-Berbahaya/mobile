@@ -39,7 +39,7 @@ struct ARPlannerView: View {
                         .ignoresSafeArea()
                     
                     if stateManager.popoverPosition != .zero {
-                        ARFloatingPopover(coordinator: coordinator, interactionMode: $stateManager.interactionMode)
+                        ARFloatingPopover(coordinator: coordinator, stateManager: stateManager)
                             .position(stateManager.popoverPosition)
                     }
                 } else {

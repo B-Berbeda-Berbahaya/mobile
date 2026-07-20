@@ -79,6 +79,15 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
                 self?.updateHandlesVisibility(isLocked: isLocked)
             }
             .store(in: &cancellables)
+            
+        stateManager.$interactionMode
+            .dropFirst()
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.updateGesturesState()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     public func setupGesture(in arView: ARView) {
@@ -743,7 +752,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
     
     private func updatePopoverPosition() {
         guard let arView = arView, let object = selectedPlacedObject else {
-            DispatchQueue.main.async { self.onPopoverPositionChanged?(.zero) }
+            DispatchQueue.main.async { self.stateManager.popoverPosition = .zero }
             return
         }
         
@@ -752,11 +761,11 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         
         if let screenPoint = arView.project(topPosition) {
             DispatchQueue.main.async {
-                self.onPopoverPositionChanged?(screenPoint)
+                self.stateManager.popoverPosition = screenPoint
             }
         } else {
             DispatchQueue.main.async {
-                self.onPopoverPositionChanged?(.zero)
+                self.stateManager.popoverPosition = .zero
             }
         }
     }
@@ -797,7 +806,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         self.lastValidPosition = nil
         self.wasDragging = false
         onSelectedObjectChanged?(nil)
-        onPopoverPositionChanged?(.zero)
+        stateManager.popoverPosition = .zero
         updateGesturesState()
     }
     
