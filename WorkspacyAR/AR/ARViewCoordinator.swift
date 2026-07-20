@@ -79,16 +79,24 @@ public final class ARViewCoordinator: NSObject {
         let coordinate = mapper.gridCoordinate(for: worldPos)
         
         if gridSystem.isAvailable(coordinate) {
-            placeObject(worldPosition: worldPos, type: activePlacingType, coordinate: coordinate)
-        } else {
-            deselectCurrentObject()
+            guard let type = activePlacingType else { return }
+            Task {
+                await placeObject(worldPosition: worldPos, type: type, coordinate: coordinate)
+            }
+        }
+        
+        else {
+            if let entity = arView.entity(at: location) as? ModelEntity {
+                if let placedObject = anchorManager.placedObjects.first(where: { $0.entity == entity }) {
+                    onSelectedObjectChanged?(placedObject)
+                }
+            }
         }
     }
-    
-    public func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType, coordinate: GridCoordinate) {
+    public func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType, coordinate: GridCoordinate) async {
         guard let arView = arView else { return }
         
-        let entity = PlaceableEntityFactory.makeEntity(for: type)
+        let entity = await PlaceableEntityFactory.makeEntity(for: type)
         let snappedWorldPos = mapper.worldPosition(for: coordinate)
         
         var transform = simd_float4x4(1) // Identity matrix
