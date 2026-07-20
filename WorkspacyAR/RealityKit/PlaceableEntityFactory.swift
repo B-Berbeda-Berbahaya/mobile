@@ -43,7 +43,7 @@ public enum PlaceableEntityFactory {
         let material = SimpleMaterial(color: materialColor, isMetallic: true)
         let entity = ModelEntity(mesh: mesh, materials: [material])
         
-        entity.generateCollisionShapes(recursive: true)
+        entity.collision = CollisionComponent(shapes: [.generateBox(size: size)])
         
         return entity
     }

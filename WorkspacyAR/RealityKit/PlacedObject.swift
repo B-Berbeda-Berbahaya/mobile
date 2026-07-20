@@ -1,11 +1,11 @@
 import RealityKit
 import Foundation
 
-public struct PlacedObject: Identifiable {
+public final class PlacedObject: Identifiable {
     public let id: UUID
     public let entity: ModelEntity
     public let type: PlaceableObjectType
-    public let gridCoordinate: GridCoordinate
+    public var gridCoordinate: GridCoordinate
     public let placedAt: Date
     
     public init(id: UUID = UUID(), entity: ModelEntity, type: PlaceableObjectType, gridCoordinate: GridCoordinate, placedAt: Date = Date()) {

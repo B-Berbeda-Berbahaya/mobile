@@ -28,7 +28,10 @@ struct ARPlannerView: View {
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
     @State private var showSidebar = false
+    @State private var popoverPosition: CGPoint = .zero
+    @State private var interactionMode: ARInteractionMode = .none
     @State private var showSuccessScreen = false
+    @State private var showClearConfirmation = false
     
     enum OnboardingStep {
         case scanningGuide
@@ -46,6 +49,11 @@ struct ARPlannerView: View {
                     if let coordinator = coordinator {
                         ARContainerView(sessionManager: sessionManager, coordinator: coordinator)
                             .ignoresSafeArea()
+                        
+                        if popoverPosition != .zero {
+                            ARFloatingPopover(coordinator: coordinator, interactionMode: $interactionMode)
+                                .position(popoverPosition)
+                        }
                     } else {
                         Color.black.ignoresSafeArea()
                         ProgressView("Initializing AR Studio...")
@@ -71,6 +79,20 @@ struct ARPlannerView: View {
             
             // Overlays & UI Controllers
             VStack {
+                // Top Toolbar
+                PlannerToolbar(
+                    isARMode: $isARMode,
+                    showDebugGrid: $showDebugGrid,
+                    sessionState: sessionState,
+                    showSidebar: $showSidebar,
+                    onClear: {
+                        showClearConfirmation = true
+                    },
+                    onFinish: {
+                        showSuccessScreen = true
+                    }
+                )
+                
                 Spacer()
                 
                 // Bottom control panel (Picker or Adjuster)
@@ -104,6 +126,7 @@ struct ARPlannerView: View {
                             },
                             onDismiss: {
                                 withAnimation { selectedObject = nil }
+                                coordinator?.deselectCurrentObject()
                             }
                         )
                         .transition(.move(edge: .bottom))
@@ -149,6 +172,65 @@ struct ARPlannerView: View {
                 .transition(.opacity)
                 .zIndex(20)
             }
+            
+            // Custom Confirmation Alert Overlay (Pure SwiftUI to avoid UIKit representable touch bugs)
+            if showClearConfirmation {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .onTapGesture {
+                            withAnimation { showClearConfirmation = false }
+                        }
+                    
+                    VStack(spacing: 20) {
+                        Text("Clear Workspace?")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Are you sure you want to remove all placed objects? This action cannot be undone.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                            }) {
+                                Text("Cancel")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                                clearWorkspace()
+                            }) {
+                                Text("Clear All")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.red)
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(24)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(radius: 10)
+                    .padding(.horizontal, 30)
+                    .frame(maxWidth: 340)
+                }
+                .ignoresSafeArea()
+                .zIndex(100)
+                .transition(.opacity.combined(with: .scale))
+            }
         }
         .onAppear {
             onboardingStep = .scanningGuide
@@ -176,68 +258,9 @@ struct ARPlannerView: View {
                         .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.primary)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .glassEffect(in: Capsule())
-                .shadow(color: Color.black.opacity(0.04), radius: 3)
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 8) {
-                    Button(action: {
-                        withAnimation { showSidebar.toggle() }
-                    }) {
-                        Image(systemName: "sidebar.left")
-                            .font(.system(.body, design: .rounded))
-                            .fontWeight(.semibold)
-                            .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
-                            .padding(8)
-                    }
-                    .glassEffect(in: Circle())
-                    
-                    Button(action: {
-                        withAnimation { showDebugGrid.toggle() }
-                    }) {
-                        Image(systemName: showDebugGrid ? "grid.circle.fill" : "grid.circle")
-                            .font(.system(.body, design: .rounded))
-                            .fontWeight(.semibold)
-                            .foregroundColor(showDebugGrid ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
-                            .padding(8)
-                    }
-                    .glassEffect(in: Circle())
-                    
-                    Button(action: {
-                        isARMode.toggle()
-                    }) {
-                        Image(systemName: isARMode ? "cube.transparent" : "arkit")
-                            .font(.system(.body, design: .rounded))
-                            .fontWeight(.semibold)
-                            .foregroundColor(isARMode ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
-                            .padding(8)
-                    }
-                    .glassEffect(in: Circle())
-                    
-                    Button(action: {
-                        clearWorkspace()
-                    }) {
-                        Image(systemName: "trash")
-                            .font(.system(.body, design: .rounded))
-                            .fontWeight(.semibold)
-                            .foregroundColor(.red)
-                            .padding(8)
-                    }
-                    .glassEffect(in: Circle())
-                    
-                    Button(action: {
-                        showSuccessScreen = true
-                    }) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(.body, design: .rounded))
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
-                            .padding(8)
-                    }
-                    .glassEffect(in: Circle())
+            } else {
+                if coordinator?.selectedPlacedObject != nil {
+                    coordinator?.deselectCurrentObject()
                 }
             }
         }
@@ -269,6 +292,34 @@ struct ARPlannerView: View {
                 } else {
                     withAnimation { selectedObject = nil }
                 }
+            }
+            coord.onPlacedObjectUpdated = { updatedObj in
+                if let index = placedObjects.firstIndex(where: { $0.id == updatedObj.id }) {
+                    let snappedWorldPos = coord.mapper.worldPosition(for: updatedObj.gridCoordinate)
+                    let heightCm = (updatedObj.entity.transform.translation.y - snappedWorldPos.y) * 100.0
+                    
+                    let forward = updatedObj.entity.transform.rotation.act(SIMD3<Float>(0, 0, 1))
+                    let yawAngle = atan2(forward.x, forward.z)
+                    var yawDegrees = yawAngle * 180.0 / .pi
+                    if yawDegrees < 0 {
+                        yawDegrees += 360.0
+                    }
+                    
+                    withAnimation {
+                        interactionMode = coord.interactionMode
+                        placedObjects[index].gridX = updatedObj.gridCoordinate.x
+                        placedObjects[index].gridZ = updatedObj.gridCoordinate.z
+                        placedObjects[index].rotation = yawDegrees
+                        placedObjects[index].heightOffset = heightCm
+                        
+                        if selectedObject?.id == updatedObj.id {
+                            selectedObject = placedObjects[index]
+                        }
+                    }
+                }
+            }
+            coord.onPopoverPositionChanged = { position in
+                popoverPosition = position
             }
             coordinator = coord
         }
@@ -575,7 +626,3 @@ struct CellButton: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-
-
-
-
