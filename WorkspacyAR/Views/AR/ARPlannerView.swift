@@ -18,8 +18,8 @@ struct ARPlannerView: View {
     
     @State private var placedObjects: [PlacedObjectSim] = []
     @State private var selectedObject: PlacedObjectSim? = nil
-    @State private var selectedObjectType: PlaceableObjectType = .ergonomicChair
-    @State private var selectedCategory: ItemCategory = .furniture
+    @State private var selectedObjectType: PlaceableObjectType = .macbook16
+    @State private var selectedCategory: ItemCategory = .laptop
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
@@ -59,7 +59,7 @@ struct ARPlannerView: View {
             VStack {
                 // Top Toolbar
                 PlannerToolbar(
-                    sessionState: stateManager.isDeskLocked ? "Virtual Desk Locked - Tap to place object" : "Create Desk Area",
+                    sessionState: stateManager.isDeskLocked ? "Meja Terkunci - Tap untuk menaruh objek" : "Buat Area Meja",
                     showSidebar: $showSidebar,
                     onClear: {
                         showClearConfirmation = true
@@ -110,22 +110,15 @@ struct ARPlannerView: View {
                         }
                     }
                 }
-            }.onChange(of: selectedObjectType) { _, newValue in
-                coordinator?.activePlacingType = newValue
             }
             
             // Sliding Sidebar Drawer
-            //            if showSidebar {
-            //                DirectoryView()
-            //                .transition(.move(edge: .leading))
-            //                .zIndex(10)
-            //            }
             if showSidebar {
                 CatalogSidebarView(
                     selectedObjectType: $selectedObjectType,
                     selectedCategory: $selectedCategory,
                     onPlaceItem: { item in
-                        selectedObjectType = item.objectType
+                        selectedObjectType = mapDeskItemToObjectType(item)
                         selectedCategory = selectedObjectType.category
                         withAnimation { showSidebar = false }
                     },
@@ -133,23 +126,9 @@ struct ARPlannerView: View {
                         withAnimation { showSidebar = false }
                     }
                 )
+                .transition(.move(edge: .leading))
                 .zIndex(10)
             }
-            //                DirectoryView(
-            //                    selectedObjectType: $selectedObjectType,
-            //                    selectedCategory: $selectedCategory,
-            //                    onPlaceItem: { item in
-            //                        selectedObjectType = item.objectType
-            //                        selectedCategory = selectedObjectType.category
-            //                        withAnimation { showSidebar = false }
-            //                    },
-            //                    onClose: {
-            //                        withAnimation { showSidebar = false }
-            //                    }
-            //                )
-            //                .transition(.move(edge: .leading))
-            //                .zIndex(10)
-            //            }
             
             // Onboarding Guide Overlay
             if onboardingStep == .scanningGuide {
@@ -289,23 +268,6 @@ struct ARPlannerView: View {
             }
             
             coordinator = coord
-        }
-    }
-    
-    private func handleCellTapped(x: Int, z: Int) async {
-        if !placedObjects.contains(where: { $0.gridX == x && $0.gridZ == z }) {
-            let newId = UUID()
-            let newObj = PlacedObjectSim(id: newId, type: selectedObjectType, gridX: x, gridZ: z)
-            placedObjects.append(newObj)
-            selectedObject = newObj
-            sessionState = "Placed \(selectedObjectType.displayName)"
-            
-            // Real AR placement
-            if let coordinator = coordinator {
-                let coord = GridCoordinate(x: x, z: z)
-                let worldPos = coordinator.mapper.worldPosition(for: coord)
-                await coordinator.placeObject(worldPosition: worldPos, type: selectedObjectType, coordinate: coord)
-            }
         } else {
             coordinator?.activePlacingType = selectedObjectType
         }
@@ -337,6 +299,22 @@ struct ARPlannerView: View {
         placedObjects.removeAll(where: { $0.id == obj.id })
         coordinator?.removeObject(withID: obj.id)
         selectedObject = nil
+    }
+    
+    private func mapDeskItemToObjectType(_ item: DeskItem) -> PlaceableObjectType {
+        let name = item.name.lowercased()
+        if name.contains("monitor") {
+            return .monitor32
+        } else if name.contains("imac") {
+            return .iMac24
+        } else if name.contains("macbook") || name.contains("laptop") {
+            return .macbook16
+        } else if name.contains("keyboard") {
+            return .magicKeyboard
+        } else if name.contains("mouse") {
+            return .appleMouse
+        }
+        return .macbook16
     }
 }
 
@@ -375,28 +353,6 @@ struct PlannerToolbar: View {
             
             HStack(spacing: 8) {
                 Button(action: {
-                    showSidebar.toggle()
-                })  {
-                    Image(systemName: "sidebar.left")
-                        .font(.title3)
-                        .padding(8)
-                        .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
-                        .clipShape(Circle())
-                }
-                
-                Button(action: {
-                    withAnimation { showDebugGrid.toggle() }
-                }) {
-                    Image(systemName: showDebugGrid ? "grid.circle.fill" : "grid.circle")
-                        .font(.title3)
-                        .padding(8)
-                        .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(.primary)
-                        .clipShape(Circle())
-                }
-                
-                Button(action: {
                     withAnimation { showSidebar.toggle() }
                 }) {
                     Image(systemName: "sidebar.left")
@@ -430,141 +386,4 @@ struct PlannerToolbar: View {
         .padding(.horizontal)
         .padding(.top, 10)
     }
-}
-
-// 3D Simulated tabletop canvas
-struct SimulatedGridCanvas: View {
-    @Binding var placedObjects: [PlacedObjectSim]
-    @Binding var selectedObject: PlacedObjectSim?
-    let showDebugGrid: Bool
-    let onCellTapped: @Sendable (Int, Int) -> Void
-    
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                LinearGradient(
-                    colors: [Color(red: 0.16, green: 0.18, blue: 0.22), Color(red: 0.11, green: 0.12, blue: 0.15)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                VStack {
-                    Spacer()
-                    
-                    let scale: CGFloat = geo.size.width < 400 ? (geo.size.width / 400.0) : 0.95
-                    
-                    VStack(spacing: 2) {
-                        ForEach(Array(stride(from: 2, through: -2, by: -1)), id: \.self) { z in
-                            HStack(spacing: 2) {
-                                ForumCellBuilder(z: z, placedObjects: $placedObjects, selectedObject: $selectedObject, showDebugGrid: showDebugGrid, onCellTapped: onCellTapped)
-                            }
-                        }
-                    }
-                    .padding(16)
-                    .background(Color.white.opacity(0.04))
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    )
-                    .rotation3DEffect(
-                        .degrees(35),
-                        axis: (x: 1.0, y: 0.0, z: 0.0),
-                        anchor: .center,
-                        perspective: 0.5
-                    )
-                    .scaleEffect(scale)
-                    .offset(y: -40)
-                    
-                    Spacer()
-                }
-            }
-        }
-    }
-}
-
-struct ForumCellBuilder: View {
-    let z: Int
-    @Binding var placedObjects: [PlacedObjectSim]
-    @Binding var selectedObject: PlacedObjectSim?
-    let showDebugGrid: Bool
-    let onCellTapped: @Sendable (Int, Int) -> Void
-    
-    var body: some View {
-        ForEach(-4...4, id: \.self) { x in
-            CellButton(
-                x: x,
-                z: z,
-                placedObject: placedObjects.first(where: { $0.gridX == x && $0.gridZ == z }),
-                isSelected: selectedObject?.gridX == x && selectedObject?.gridZ == z,
-                showDebug: showDebugGrid,
-                onTap: {
-                    onCellTapped(x, z)
-                }
-            )
-        }
-    }
-}
-
-// Single Cell on the Simulated Grid
-struct CellButton: View {
-    let x: Int
-    let z: Int
-    let placedObject: PlacedObjectSim?
-    let isSelected: Bool
-    let showDebug: Bool
-    let onTap: @Sendable () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28).opacity(0.3) :
-                            (placedObject != nil ? Color.white.opacity(0.08) : Color.white.opacity(0.02))
-                    )
-                    .frame(width: 38, height: 38)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : Color.white.opacity(0.1), lineWidth: 1)
-                    )
-                
-                if showDebug && placedObject == nil {
-                    Text("\(x),\(z)")
-                        .font(.system(size: 8))
-                        .foregroundColor(.white.opacity(0.2))
-                }
-                
-                if let obj = placedObject {
-                    VStack {
-                        Image(systemName: obj.type.sfSymbol)
-                            .font(.system(size: 16))
-                            .foregroundColor(isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28) : .white)
-                            .rotationEffect(.degrees(Double(obj.rotation)))
-                            .scaleEffect(isSelected ? 1.2 : 1.0)
-                            .animation(.spring(), value: isSelected)
-                    }
-                }
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-private struct DetailPlaceholderContainer: View {
-    var body: some View {
-        NavigationSplitView {
-            List {
-                Text("Sidebar")
-            }
-        } detail: {
-            Text("Select an item")
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
-#Preview("Detail Placeholder") {
-    DetailPlaceholderContainer()
 }

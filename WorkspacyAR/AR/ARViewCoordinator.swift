@@ -11,7 +11,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
     public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
     public var onPopoverPositionChanged: ((CGPoint) -> Void)?
     
-    public var activePlacingType: PlaceableObjectType = .ergonomicChair
+    public var activePlacingType: PlaceableObjectType = .macbook16
     
     public weak var arView: ARView?
     public var selectedPlacedObject: PlacedObject?
@@ -134,7 +134,9 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         
         let hitResults = arView.hitTest(location)
         if let deskHit = hitResults.first(where: { $0.entity.name == "desk_model" }) {
-            placeObject(worldPosition: deskHit.position, type: activePlacingType)
+            Task { @MainActor in
+                await placeObject(worldPosition: deskHit.position, type: activePlacingType)
+            }
         } else {
             // Failed to drop: Spawn invalid ghost
             let raycastResults = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .horizontal)
@@ -149,14 +151,16 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
                 position = SIMD3<Float>(0, 0, -0.5) // Fallback
             }
             
-            spawnInvalidGhost(type: activePlacingType, at: position, in: arView)
+            Task { @MainActor in
+                await spawnInvalidGhost(type: activePlacingType, at: position, in: arView)
+            }
         }
     }
     
-    private func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType) {
+    private func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType) async {
         guard let arView = arView else { return }
         
-        let entity = PlaceableEntityFactory.makeEntity(for: type)
+        let entity = await PlaceableEntityFactory.makeEntity(for: type)
         let physics = PhysicsBodyComponent(massProperties: .init(mass: 1.0), material: .default, mode: .dynamic)
         entity.components.set(physics)
         
@@ -170,8 +174,8 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         selectObject(placedObj)
     }
     
-    private func spawnInvalidGhost(type: PlaceableObjectType, at position: SIMD3<Float>, in arView: ARView) {
-        let modelEntity = PlaceableEntityFactory.makeEntity(for: type)
+    private func spawnInvalidGhost(type: PlaceableObjectType, at position: SIMD3<Float>, in arView: ARView) async {
+        let modelEntity = await PlaceableEntityFactory.makeEntity(for: type)
         modelEntity.name = "invalid_ghost"
         
         let redMaterial = UnlitMaterial(color: UIColor.red.withAlphaComponent(0.60))
@@ -185,6 +189,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
             anchorEntity?.removeFromParent()
         }
     }
+
     
     private func applyMaterialRecursively(_ entity: Entity, material: RealityKit.Material) {
         if let modelEntity = entity as? ModelEntity {
@@ -751,6 +756,95 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
                 rotationGesture.isEnabled = (stateManager.interactionMode == .rotate)
             } else if let panGesture = gesture as? UIPanGestureRecognizer, panGesture.minimumNumberOfTouches == 2 {
                 panGesture.isEnabled = (stateManager.interactionMode == .move)
+            }
+        }
+    }
+    
+    public func addPointAtFocus() {
+        guard let arView = arView, let focusPos = stateManager.focus3DPosition else { return }
+        
+        let anchor: AnchorEntity
+        if let existing = self.deskAnchor {
+            anchor = existing
+        } else {
+            anchor = AnchorEntity()
+            self.deskAnchor = anchor
+            arView.scene.addAnchor(anchor)
+        }
+        
+        let index = stateManager.calibrationPoints.count
+        let targetY = stateManager.calibrationPoints.first?.y ?? focusPos.y
+        let flatPos = SIMD3<Float>(focusPos.x, targetY, focusPos.z)
+        
+        let handleMesh = MeshResource.generateSphere(radius: 0.015)
+        let handleMaterial = SimpleMaterial(color: .green, isMetallic: false)
+        let handleEntity = ModelEntity(mesh: handleMesh, materials: [handleMaterial])
+        
+        handleEntity.name = "handle_\(index)"
+        handleEntity.position = flatPos
+        
+        handleEntity.generateCollisionShapes(recursive: true)
+        arView.installGestures(.translation, for: handleEntity)
+        
+        anchor.addChild(handleEntity)
+        
+        DispatchQueue.main.async {
+            self.stateManager.calibrationPoints.append(flatPos)
+            self.stateManager.isDeskDetected = true
+        }
+    }
+    
+    public func removeLastPoint() {
+        guard let anchor = deskAnchor, !stateManager.calibrationPoints.isEmpty else { return }
+        let indexToRemove = stateManager.calibrationPoints.count - 1
+        
+        if let handle = anchor.findEntity(named: "handle_\(indexToRemove)") {
+            handle.removeFromParent()
+        }
+        
+        DispatchQueue.main.async {
+            self.stateManager.calibrationPoints.removeLast()
+            if self.stateManager.calibrationPoints.isEmpty {
+                self.stateManager.isDeskDetected = false
+            }
+        }
+    }
+    
+    public func resetCalibration() {
+        if let anchor = deskAnchor {
+            anchor.removeFromParent()
+            self.deskAnchor = nil
+        }
+        if let rAnchor = reticleAnchor {
+            rAnchor.removeFromParent()
+            self.reticleAnchor = nil
+            self.reticleEntity = nil
+        }
+        
+        DispatchQueue.main.async {
+            self.stateManager.calibrationPoints.removeAll()
+            self.stateManager.isDeskDetected = false
+            self.stateManager.isDeskLocked = false
+        }
+    }
+    
+    public func updateHandlesVisibility(isLocked: Bool) {
+        guard let anchor = deskAnchor else { return }
+        let pointsCount = stateManager.calibrationPoints.count
+        
+        for i in 0..<pointsCount {
+            if let handle = anchor.findEntity(named: "handle_\(i)") {
+                handle.isEnabled = !isLocked
+            }
+        }
+        
+        if let deskModel = anchor.findEntity(named: "desk_model") as? ModelEntity {
+            if isLocked {
+                deskModel.generateCollisionShapes(recursive: true)
+                deskModel.components.set(PhysicsBodyComponent(massProperties: .init(mass: 0.0), material: .default, mode: .static))
+            } else {
+                deskModel.components.remove(PhysicsBodyComponent.self)
+                deskModel.components.remove(CollisionComponent.self)
             }
         }
     }

@@ -234,8 +234,8 @@ struct DiagnosticRow: View {
 #Preview {
     LayoutSuccessView(
         placedObjects: [
-            PlacedObjectSim(id: UUID(), type: .monitor34, rotation: 0, posX: 0.0, posZ: -0.2),
-            PlacedObjectSim(id: UUID(), type: .keyboard, rotation: 0, posX: 0.0, posZ: 0.2)
+            PlacedObjectSim(id: UUID(), type: .monitor32, rotation: 0, posX: 0.0, posZ: -0.2),
+            PlacedObjectSim(id: UUID(), type: .magicKeyboard, rotation: 0, posX: 0.0, posZ: 0.2)
         ],
         onSaveAndExit: {}
     )

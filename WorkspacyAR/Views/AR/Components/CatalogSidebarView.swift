@@ -301,8 +301,8 @@ struct CatalogSidebarView: View {
     ZStack(alignment: .leading) {
         Color.black.ignoresSafeArea()
         CatalogSidebarView(
-            selectedObjectType: .constant(.ergonomicChair),
-            selectedCategory: .constant(.furniture),
+            selectedObjectType: .constant(.macbook16),
+            selectedCategory: .constant(.laptop),
             onPlaceItem: { _ in },
             onClose: {}
         )
