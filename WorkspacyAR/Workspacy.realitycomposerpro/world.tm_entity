@@ -1,0 +1,192 @@
+__type: "tm_entity"
+__uuid: "de8a009b-01ef-ebc4-cd9c-69be7aafb00b"
+name: "world"
+components: [
+	{
+		__type: "tm_transform_component"
+		__uuid: "0d1b73b4-30e8-e1e4-49e8-ae3b3530b821"
+		local_position_double: {
+			__uuid: "0e7b8b53-3636-4c35-8526-3fe229c1f2e3"
+		}
+		local_rotation: {
+			__uuid: "9f368040-ded8-a741-1199-eec8ac693637"
+		}
+		local_scale: {
+			__uuid: "fd57e3d9-a96b-8f11-4905-fa89908054d5"
+		}
+	}
+]
+children: [
+	{
+		__uuid: "75f9de6c-e461-ff66-d40e-2c7221a944a0"
+		__prototype_type: "tm_entity"
+		__prototype_uuid: "844058c3-2c63-47ea-17cc-cab4c0062774"
+		name: "16inch_Macbook"
+		components__instantiated: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "f0915858-8481-fa15-d71d-a0112c83fdb0"
+				__prototype_type: "tm_transform_component"
+				__prototype_uuid: "dcfae06f-e9b3-b3ae-98bc-c27dd6db8878"
+				local_position_double: {
+					__uuid: "52f7306e-cd46-1b22-3731-3269487380c7"
+					__prototype_type: "tm_position_double"
+					__prototype_uuid: "4c0ad7d5-c8f4-6b34-6c73-d59e537c6714"
+				}
+				local_rotation: {
+					__uuid: "a7b6fc8c-e361-18e0-d682-f1f862730dd1"
+					__prototype_type: "tm_rotation"
+					__prototype_uuid: "bdaed613-2f72-1b40-7ae5-22591926901c"
+				}
+				local_scale: {
+					__uuid: "32f1b6bf-02ee-cea5-e234-0ba1d9dac118"
+					__prototype_type: "tm_scale"
+					__prototype_uuid: "0fdab7e6-a33f-8f23-c927-f18537e77a96"
+				}
+			}
+		]
+	}
+	{
+		__uuid: "53ed4850-e72b-ff88-b784-c2cc88feb96c"
+		__prototype_type: "tm_entity"
+		__prototype_uuid: "2f41e4ad-2cce-d723-c412-67e96494a061"
+		name: "24inch_iMac"
+		components__instantiated: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "e566fb13-afd5-8824-91e1-9bc51cf7a96a"
+				__prototype_type: "tm_transform_component"
+				__prototype_uuid: "6d8a0613-7740-abbf-fc24-164fae5047b6"
+				local_position_double: {
+					__uuid: "bcef8bdc-4f22-882c-fe57-3d2cf384185a"
+					__prototype_type: "tm_position_double"
+					__prototype_uuid: "e2186b08-9ff6-9f0d-519a-3e5856a5cc24"
+				}
+				local_rotation: {
+					__uuid: "a5d2c983-6c08-7c79-44e0-f864315bd927"
+					__prototype_type: "tm_rotation"
+					__prototype_uuid: "5a5f0b60-bbcd-e276-4cfc-85a3b49f8d76"
+				}
+				local_scale: {
+					__uuid: "0541d62e-b0e9-77fd-b38a-a34155d3e0d7"
+					__prototype_type: "tm_scale"
+					__prototype_uuid: "98325632-c5da-8794-471f-635a14a14f7c"
+				}
+			}
+		]
+	}
+	{
+		__uuid: "6ca3b85c-0788-5bb8-dffe-5e4525bd94ad"
+		__prototype_type: "tm_entity"
+		__prototype_uuid: "b07b7010-abfa-7bb5-b7a5-b2f8a6ce9d19"
+		name: "32inch_Monitor"
+		components__instantiated: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "a09ccafa-edf0-000a-5cf3-e49f29b63e4c"
+				__prototype_type: "tm_transform_component"
+				__prototype_uuid: "cc42d68c-8aaa-1069-9dec-1114a6c5ca2c"
+				local_position_double: {
+					__uuid: "02f9a473-f42a-91ff-9496-b615703d9e7a"
+					__prototype_type: "tm_position_double"
+					__prototype_uuid: "29314a55-fac0-660b-c82f-d169385d733a"
+				}
+				local_rotation: {
+					__uuid: "ec01bfe2-4538-521d-d073-4caaf63743f6"
+					__prototype_type: "tm_rotation"
+					__prototype_uuid: "7ddc704f-940e-3770-fdb3-2bf43f8fed34"
+				}
+				local_scale: {
+					__uuid: "c35b50ac-d25a-8826-00cc-485d029214d8"
+					__prototype_type: "tm_scale"
+					__prototype_uuid: "bd493fc2-7000-4bde-e72d-8f1381fce6db"
+				}
+			}
+		]
+	}
+	{
+		__uuid: "293ffb5a-80b2-7aff-74e0-fd9bf98fc18a"
+		__prototype_type: "tm_entity"
+		__prototype_uuid: "5cbfb2bd-74a2-2fff-d6bc-f111c8344ae9"
+		name: "AppleMouse"
+		components__instantiated: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "e54653f0-ec10-fa67-2fe2-6b9f1e8238cb"
+				__prototype_type: "tm_transform_component"
+				__prototype_uuid: "346a010e-0153-a18a-3454-0649406f927d"
+				local_position_double: {
+					__uuid: "6e7fd01c-5f7a-4e25-d2ca-e9ce93e50a6e"
+					__prototype_type: "tm_position_double"
+					__prototype_uuid: "10db9e00-d990-3690-3b80-e6d2387b9ad5"
+				}
+				local_rotation: {
+					__uuid: "c0e0ae5a-9ece-6602-c103-19c8d4130f50"
+					__prototype_type: "tm_rotation"
+					__prototype_uuid: "f181fd92-ded3-98bf-9448-99133c38bb34"
+				}
+				local_scale: {
+					__uuid: "1f3fb95a-d220-c633-9e4f-d7c313195312"
+					__prototype_type: "tm_scale"
+					__prototype_uuid: "644e5d49-bd50-21e9-99c9-8c8ca13174d3"
+				}
+			}
+		]
+	}
+	{
+		__uuid: "4c4580c6-a2d2-f86b-054e-f23fd3699c6e"
+		__prototype_type: "tm_entity"
+		__prototype_uuid: "7fe46089-a451-73f5-3d05-f6278c71c667"
+		name: "MagicKeyboardMac"
+		components__instantiated: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "28818739-6ede-9e52-8d26-6b97406205fb"
+				__prototype_type: "tm_transform_component"
+				__prototype_uuid: "aab4c07c-8f4f-4629-6d28-62486e4dcb7e"
+				local_position_double: {
+					__uuid: "c7af4702-f6d8-d898-87c6-bc0b2a0b062f"
+					__prototype_type: "tm_position_double"
+					__prototype_uuid: "5549831e-4d73-b10f-3845-1ba0f5a7b204"
+				}
+				local_rotation: {
+					__uuid: "40093397-b88e-6d3b-afa4-c564639be949"
+					__prototype_type: "tm_rotation"
+					__prototype_uuid: "125ada8a-26da-f999-b34c-22190e8d1fb6"
+				}
+				local_scale: {
+					__uuid: "b63a5fde-d8f8-ae9e-757f-01f4f3d128b2"
+					__prototype_type: "tm_scale"
+					__prototype_uuid: "e0b3f1f1-d03d-eb30-0c09-46c02de0f8c0"
+				}
+			}
+		]
+	}
+]
+child_sort_values: [
+	{
+		__uuid: "bf0c9098-59d4-29ea-12a1-d88e6792b739"
+		child: "75f9de6c-e461-ff66-d40e-2c7221a944a0"
+	}
+	{
+		__uuid: "f1bdaceb-1c61-d1d0-b06d-e637a29d99bc"
+		child: "53ed4850-e72b-ff88-b784-c2cc88feb96c"
+		value: 1
+	}
+	{
+		__uuid: "8404ea22-d81a-c779-569f-a51157ac9741"
+		child: "6ca3b85c-0788-5bb8-dffe-5e4525bd94ad"
+		value: 2
+	}
+	{
+		__uuid: "c2742473-dbb7-b2f9-cdb0-1849fd91eb47"
+		child: "293ffb5a-80b2-7aff-74e0-fd9bf98fc18a"
+		value: 3
+	}
+	{
+		__uuid: "afbc26dd-e298-d78c-7ca2-427fd3564c37"
+		child: "4c4580c6-a2d2-f86b-054e-f23fd3699c6e"
+		value: 4
+	}
+]
+__asset_uuid: "2184fc00-345d-84e0-e76f-32e4cf61eba3"

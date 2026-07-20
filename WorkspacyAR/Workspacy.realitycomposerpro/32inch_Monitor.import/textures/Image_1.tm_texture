@@ -1,0 +1,31 @@
+__type: "tm_texture"
+__uuid: "c880d359-43cc-9c76-2053-eeeaf4eeb9e8"
+source_filename: "/Users/thor/Documents/code/asset for arkit+realitykit/workspacy-assets/32inch_Monitor.usdz[textures/Image_1.png]"
+source_texture: "b39d48a5-0e7e-0c19-81cd-401b1e73bf84"
+transform: "dbdb0d4a0b9144f5"
+transform_settings: {
+	__uuid: "fcf19ec6-a39a-f94d-f8ad-b24cf8235b2f"
+	__prototype_type: "tm_creation_graph"
+	__prototype_uuid: "9eee8001-52a4-671e-193e-13b33cb6c233"
+	graph: {
+		__uuid: "a5048144-6126-ee05-67d0-0bf07fa3c24f"
+		__prototype_type: "tm_graph"
+		__prototype_uuid: "311e84c2-053c-4beb-0569-d8aac8083cd2"
+		interface: {
+			__uuid: "d4a7d584-94fd-fe31-8189-f49549432c1f"
+			__prototype_type: "tm_graph_interface"
+			__prototype_uuid: "80ed42b0-003f-1504-072c-3ea14241dccf"
+		}
+	}
+}
+color_space: {
+	__uuid: "eccabe0e-ab43-76f5-deda-a08349de0647"
+	transfer_function: 1
+}
+__asset_uuid: "4eaaf6e3-eba8-4afe-1bc1-a68f70130d00"
+__asset_labels: [
+	"e4bec38d8f73f423"
+]
+__asset_thumbnail: {
+	__uuid: "23b0d818-9818-c637-adf8-8e5ae5147559"
+}

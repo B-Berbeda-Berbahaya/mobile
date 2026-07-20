@@ -1,0 +1,66 @@
+__type: "tm_usd_asset"
+__uuid: "e5720ca6-703e-818c-801c-9faf9e1c0560"
+source_path: "/Users/thor/Documents/code/asset for arkit+realitykit/workspacy-assets/AppleMouse.usdz"
+settings: [
+	{
+		__type: "tm_scene_optimizer"
+		__uuid: "574a6cde-7de9-11ff-ec57-1ba5e0239281"
+		settings: {
+			__uuid: "af4e928e-3461-f5e1-fe98-37095e31bb98"
+			graph: {
+				__uuid: "4d4e2a29-2e4b-1b30-42f5-d0efcf3e2b58"
+				interface: {
+					__uuid: "4ebd1c85-4e7b-315e-c349-b6df65ae7c5a"
+					inputs: [
+						{
+							__uuid: "f1c37cf1-e313-719e-a471-fa321e73130d"
+							name: "Merging Mode"
+							id: "scene_optimizer_settings__merging_mode"
+							value: {
+								__type: "tm_scene_optimizer_merging_mode"
+								__uuid: "032750b8-a733-6aa0-2842-fa399c49b96d"
+							}
+							public: true
+						}
+						{
+							__uuid: "58eaca94-bcbe-615a-a120-25c211974e6f"
+							name: "Entities to Keep"
+							id: "scene_optimizer_settings__keep_entities_list"
+							value: {
+								__type: "tm_scene_optimizer_keep_entities_list"
+								__uuid: "347a57d2-8935-7209-407b-be28a3fe1f26"
+							}
+							public: true
+						}
+					]
+				}
+			}
+		}
+		output: "7dd576a5-6513-8d92-9ca7-683ac7078645"
+	}
+	{
+		__type: "tm_lod_generator"
+		__uuid: "030ecb0c-2f2a-8b61-2b15-143f9d30b9e7"
+	}
+]
+pro_settings: [
+	{
+		__type: "tm_usd_purpose_settings"
+		__uuid: "a05eb934-0d55-52b9-0f10-8fc13c8e0c53"
+	}
+	{
+		__type: "tm_usd_dev_settings"
+		__uuid: "9c458903-6834-852b-a8ba-c841ffc1519a"
+		mesh_creation_graph: "feefd623-b26a-6155-97b0-2dd807e0e1c3"
+	}
+]
+variants: [
+	{
+		__uuid: "71d9e536-12a0-ceeb-cdbb-d9bd3a7ea63c"
+		name: "Default"
+		root_entity: "361af01a-446f-678f-7c18-c24e03960fd7"
+		proxy_entity: "5cbfb2bd-74a2-2fff-d6bc-f111c8344ae9"
+		session: "48daf503-3268-5222-e7de-8f0673a2d485"
+	}
+]
+__asset_uuid: "8058582e-8444-054a-b3e7-0ab971b43022"

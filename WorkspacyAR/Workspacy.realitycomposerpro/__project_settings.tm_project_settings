@@ -1,0 +1,59 @@
+__type: "tm_settings_owner"
+__uuid: "e1ef51d1-4360-bbaf-ac5c-58655ba9168f"
+settings: [
+	{
+		__uuid: "d2772675-3d5b-5092-b859-374e045d3ab8"
+		object: {
+			__type: "tm_global_rendering_settings"
+			__uuid: "5ac52c5f-2df1-9131-37d2-f0decd068ccd"
+		}
+	}
+	{
+		__uuid: "7e24efd1-3a4f-a1ee-8fc7-1c1274257257"
+		object: {
+			__type: "tm_build_settings"
+			__uuid: "d9f3f569-1168-265d-8f22-dfdfd397c25f"
+			xcode_directory: "/Users/thor/Documents/code/arkit+realitykit/mobile/WorkspacyAR.xcodeproj"
+			plugin_directory: ""
+			build_configuration: "Debug"
+		}
+	}
+	{
+		__uuid: "8a43625b-b963-3ad6-7d91-359a6949fd8a"
+		object: {
+			__type: "tm_cloth_project_settings"
+			__uuid: "5d18200d-c806-33c7-ea32-f91ec003698e"
+			simulation: {
+				__uuid: "c569ea0a-77a3-159d-7e2c-1f949c85665f"
+				is_global: true
+				gravity: {
+					__uuid: "f9aad7f9-7124-74c5-c06d-73ea41e2653a"
+					y: -9.8100004196166992
+				}
+				wind: {
+					__uuid: "98a3773e-2e82-0762-e999-676779827fb4"
+				}
+			}
+		}
+	}
+	{
+		__uuid: "1da8788d-c545-3ba5-ec4d-a0173edd52eb"
+		object: {
+			__type: "tm_camera_component"
+			__uuid: "1fdd422d-4ab5-63be-5fae-581c61fb082a"
+			sensor_size: {
+				__uuid: "81d34433-cd04-313d-3d53-389293f0a067"
+				x: 36
+				y: 24
+			}
+		}
+	}
+	{
+		__uuid: "6e5c46ba-5438-b790-04d3-87810a0b0b4b"
+		object: {
+			__type: "tm_lightmap_settings"
+			__uuid: "1de46f29-b572-9f7c-c8a5-87cc25d8a2eb"
+		}
+	}
+]
+__asset_uuid: "5f75300f-9278-3778-df65-d662d24fdf15"
