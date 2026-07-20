@@ -17,17 +17,19 @@ struct ARPlannerView: View {
     @StateObject private var sessionManager = ARSessionManager()
     @State private var coordinator: ARViewCoordinator? = nil
     
+    //dummy
     @State private var placedObjects: [PlacedObjectSim] = [
-        PlacedObjectSim(id: UUID(), type: .monitor34, gridX: 0, gridZ: 2, rotation: 0, heightOffset: 5, distance: 58),
-        PlacedObjectSim(id: UUID(), type: .keyboard, gridX: 0, gridZ: 0, rotation: 0, heightOffset: 0, distance: 40)
+        PlacedObjectSim(id: UUID(), type: .monitor32, gridX: 0, gridZ: 2, rotation: 0, heightOffset: 5, distance: 58),
+        PlacedObjectSim(id: UUID(), type: .magicKeyboard, gridX: 0, gridZ: 0, rotation: 0, heightOffset: 0, distance: 40)
     ]
+    
     @State private var selectedObject: PlacedObjectSim? = nil
-    @State private var selectedObjectType: PlaceableObjectType = .ergonomicChair
-    @State private var selectedCategory: ItemCategory = .furniture
+    @State private var selectedObjectType: PlaceableObjectType = .monitor32
+    @State private var selectedCategory: ItemCategory = .monitor
     @State private var showDebugGrid = true
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
-    @State private var showSidebar = false
+    @State private var showSidebar = true
     @State private var showSuccessScreen = false
     
     enum OnboardingStep {
@@ -63,7 +65,7 @@ struct ARPlannerView: View {
                     selectedObject: $selectedObject,
                     showDebugGrid: showDebugGrid,
                     onCellTapped: { x, z in
-                        handleCellTapped(x: x, z: z)
+                        Task { await handleCellTapped(x: x, z: z) }
                     }
                 )
             }
@@ -122,15 +124,22 @@ struct ARPlannerView: View {
                         .transition(.move(edge: .bottom))
                     }
                 }
+            }.onChange(of: selectedObjectType) { _, newValue in
+                coordinator?.activePlacingType = newValue
             }
             
             // Sliding Sidebar Drawer
+            //            if showSidebar {
+            //                DirectoryView()
+            //                .transition(.move(edge: .leading))
+            //                .zIndex(10)
+            //            }
             if showSidebar {
                 CatalogSidebarView(
                     selectedObjectType: $selectedObjectType,
                     selectedCategory: $selectedCategory,
                     onPlaceItem: { item in
-                        selectedObjectType = mapDeskItemToObjectType(item)
+                        selectedObjectType = item.objectType
                         selectedCategory = selectedObjectType.category
                         withAnimation { showSidebar = false }
                     },
@@ -138,9 +147,23 @@ struct ARPlannerView: View {
                         withAnimation { showSidebar = false }
                     }
                 )
-                .transition(.move(edge: .leading))
                 .zIndex(10)
             }
+            //                DirectoryView(
+            //                    selectedObjectType: $selectedObjectType,
+            //                    selectedCategory: $selectedCategory,
+            //                    onPlaceItem: { item in
+            //                        selectedObjectType = item.objectType
+            //                        selectedCategory = selectedObjectType.category
+            //                        withAnimation { showSidebar = false }
+            //                    },
+            //                    onClose: {
+            //                        withAnimation { showSidebar = false }
+            //                    }
+            //                )
+            //                .transition(.move(edge: .leading))
+            //                .zIndex(10)
+            //            }
             
             // Onboarding Guide Overlay
             if onboardingStep == .scanningGuide {
@@ -198,7 +221,7 @@ struct ARPlannerView: View {
         }
     }
     
-    private func handleCellTapped(x: Int, z: Int) {
+    private func handleCellTapped(x: Int, z: Int) async {
         if !placedObjects.contains(where: { $0.gridX == x && $0.gridZ == z }) {
             let newId = UUID()
             let newObj = PlacedObjectSim(id: newId, type: selectedObjectType, gridX: x, gridZ: z)
@@ -210,7 +233,7 @@ struct ARPlannerView: View {
             if let coordinator = coordinator {
                 let coord = GridCoordinate(x: x, z: z)
                 let worldPos = coordinator.mapper.worldPosition(for: coord)
-                coordinator.placeObject(worldPosition: worldPos, type: selectedObjectType, coordinate: coord)
+                await coordinator.placeObject(worldPosition: worldPos, type: selectedObjectType, coordinate: coord)
             }
         } else {
             selectedObject = placedObjects.first(where: { $0.gridX == x && $0.gridZ == z })
@@ -270,18 +293,6 @@ struct ARPlannerView: View {
         selectedObject = nil
         sessionState = "Removed \(obj.type.displayName)"
     }
-    
-    private func mapDeskItemToObjectType(_ item: DeskItem) -> PlaceableObjectType {
-        let name = item.name.lowercased()
-        if name.contains("monitor") {
-            return .monitor34
-        } else if name.contains("vase") || name.contains("pot") || name.contains("plant") {
-            return .plant
-        } else if name.contains("organizer") || name.contains("case") || name.contains("pouch") {
-            return .keyboard
-        }
-        return .ergonomicChair
-    }
 }
 
 // Sub-component: Planner toolbar header
@@ -321,8 +332,8 @@ struct PlannerToolbar: View {
             
             HStack(spacing: 8) {
                 Button(action: {
-                    withAnimation { showSidebar.toggle() }
-                }) {
+                    showSidebar.toggle()
+                })  {
                     Image(systemName: "sidebar.left")
                         .font(.title3)
                         .padding(8)
@@ -383,7 +394,7 @@ struct SimulatedGridCanvas: View {
     @Binding var placedObjects: [PlacedObjectSim]
     @Binding var selectedObject: PlacedObjectSim?
     let showDebugGrid: Bool
-    let onCellTapped: (Int, Int) -> Void
+    let onCellTapped: @Sendable (Int, Int) -> Void
     
     var body: some View {
         GeometryReader { geo in
@@ -435,7 +446,7 @@ struct ForumCellBuilder: View {
     @Binding var placedObjects: [PlacedObjectSim]
     @Binding var selectedObject: PlacedObjectSim?
     let showDebugGrid: Bool
-    let onCellTapped: (Int, Int) -> Void
+    let onCellTapped: @Sendable (Int, Int) -> Void
     
     var body: some View {
         ForEach(-4...4, id: \.self) { x in
@@ -460,7 +471,7 @@ struct CellButton: View {
     let placedObject: PlacedObjectSim?
     let isSelected: Bool
     let showDebug: Bool
-    let onTap: () -> Void
+    let onTap: @Sendable () -> Void
     
     var body: some View {
         Button(action: onTap) {
@@ -468,7 +479,7 @@ struct CellButton: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
                         isSelected ? Color(red: 0.45, green: 0.38, blue: 0.28).opacity(0.3) :
-                        (placedObject != nil ? Color.white.opacity(0.08) : Color.white.opacity(0.02))
+                            (placedObject != nil ? Color.white.opacity(0.08) : Color.white.opacity(0.02))
                     )
                     .frame(width: 38, height: 38)
                     .overlay(
@@ -496,4 +507,21 @@ struct CellButton: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
+}
+
+private struct DetailPlaceholderContainer: View {
+    var body: some View {
+        NavigationSplitView {
+            List {
+                Text("Sidebar")
+            }
+        } detail: {
+            Text("Select an item")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+#Preview("Detail Placeholder") {
+    DetailPlaceholderContainer()
 }
