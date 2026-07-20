@@ -1,3 +1,4 @@
+/*
 import Foundation
 
 public struct WorkspaceDesign: Identifiable, Hashable {
@@ -17,3 +18,4 @@ public struct WorkspaceDesign: Identifiable, Hashable {
         self.iconName = iconName
     }
 }
+*/

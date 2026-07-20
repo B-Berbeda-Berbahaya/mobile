@@ -38,7 +38,8 @@ struct ARPlannerView: View {
     @State private var onboardingStep: OnboardingStep = .scanningGuide
     
     var body: some View {
-        ZStack(alignment: .leading) {
+        NavigationStack {
+            ZStack(alignment: .leading) {
             // Background Canvas (AR or Interactive Grid)
             if isARMode {
                 ZStack {
@@ -70,20 +71,6 @@ struct ARPlannerView: View {
             
             // Overlays & UI Controllers
             VStack {
-                // Top Toolbar
-                PlannerToolbar(
-                    isARMode: $isARMode,
-                    showDebugGrid: $showDebugGrid,
-                    sessionState: sessionState,
-                    showSidebar: $showSidebar,
-                    onClear: {
-                        clearWorkspace()
-                    },
-                    onFinish: {
-                        showSuccessScreen = true
-                    }
-                )
-                
                 Spacer()
                 
                 // Bottom control panel (Picker or Adjuster)
@@ -126,18 +113,24 @@ struct ARPlannerView: View {
             
             // Sliding Sidebar Drawer
             if showSidebar {
-                CatalogSidebarView(
-                    selectedObjectType: $selectedObjectType,
-                    selectedCategory: $selectedCategory,
-                    onPlaceItem: { item in
-                        selectedObjectType = mapDeskItemToObjectType(item)
-                        selectedCategory = selectedObjectType.category
-                        withAnimation { showSidebar = false }
-                    },
-                    onClose: {
-                        withAnimation { showSidebar = false }
+                GeometryReader { geo in
+                    let sidebarWidth = geo.size.width * 0.70
+                    HStack(spacing: 0) {
+                        DirectoryView(onPlaceItem: { item in
+                            selectedObjectType = mapDeskItemToObjectType(item)
+                            selectedCategory = selectedObjectType.category
+                            withAnimation { showSidebar = false }
+                        })
+                        .frame(width: sidebarWidth)
+                        
+                        Color.black.opacity(0.35)
+                            .frame(width: geo.size.width - sidebarWidth)
+                            .onTapGesture {
+                                withAnimation { showSidebar = false }
+                            }
                     }
-                )
+                    .ignoresSafeArea(.all, edges: .vertical)
+                }
                 .transition(.move(edge: .leading))
                 .zIndex(10)
             }
@@ -164,8 +157,91 @@ struct ARPlannerView: View {
         .fullScreenCover(isPresented: $showSuccessScreen) {
             LayoutSuccessView(placedObjects: placedObjects, onSaveAndExit: {
                 showSuccessScreen = false
-                NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
             })
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(isARMode ? Color.red : Color.green)
+                        .frame(width: 8, height: 8)
+                    Text(isARMode ? "AR CAMERA" : "STUDIO MODE")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.secondary)
+                    
+                    Text("•")
+                        .foregroundColor(.secondary)
+                    
+                    Text(sessionState)
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .glassEffect(in: Capsule())
+                .shadow(color: Color.black.opacity(0.04), radius: 3)
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 8) {
+                    Button(action: {
+                        withAnimation { showSidebar.toggle() }
+                    }) {
+                        Image(systemName: "sidebar.left")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                            .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
+                            .padding(8)
+                    }
+                    .glassEffect(in: Circle())
+                    
+                    Button(action: {
+                        withAnimation { showDebugGrid.toggle() }
+                    }) {
+                        Image(systemName: showDebugGrid ? "grid.circle.fill" : "grid.circle")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                            .foregroundColor(showDebugGrid ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
+                            .padding(8)
+                    }
+                    .glassEffect(in: Circle())
+                    
+                    Button(action: {
+                        isARMode.toggle()
+                    }) {
+                        Image(systemName: isARMode ? "cube.transparent" : "arkit")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                            .foregroundColor(isARMode ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
+                            .padding(8)
+                    }
+                    .glassEffect(in: Circle())
+                    
+                    Button(action: {
+                        clearWorkspace()
+                    }) {
+                        Image(systemName: "trash")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                            .foregroundColor(.red)
+                            .padding(8)
+                    }
+                    .glassEffect(in: Circle())
+                    
+                    Button(action: {
+                        showSuccessScreen = true
+                    }) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
+                            .padding(8)
+                    }
+                    .glassEffect(in: Circle())
+                }
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
         }
     }
     
@@ -284,6 +360,7 @@ struct ARPlannerView: View {
     }
 }
 
+/*
 // Sub-component: Planner toolbar header
 struct PlannerToolbar: View {
     @Binding var isARMode: Bool
@@ -377,6 +454,7 @@ struct PlannerToolbar: View {
         .padding(.top, 10)
     }
 }
+*/
 
 // 3D Simulated tabletop canvas
 struct SimulatedGridCanvas: View {
@@ -497,3 +575,7 @@ struct CellButton: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
+
+
+
+

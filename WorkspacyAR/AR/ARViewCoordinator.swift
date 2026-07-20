@@ -13,8 +13,7 @@ public final class ARViewCoordinator: NSObject {
     public var activePlacingType: PlaceableObjectType = .ergonomicChair
     
     public var arView: ARView?
-    
-    public init(gridSystem: GridSystem) {
+        public init(gridSystem: GridSystem) {
         self.gridSystem = gridSystem
         self.mapper = WorldToGridMapper(gridSystem: gridSystem)
         super.init()

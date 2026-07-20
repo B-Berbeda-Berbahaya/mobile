@@ -116,7 +116,7 @@ struct LayoutSuccessView: View {
                         }
                         
                         Button(action: onSaveAndExit) {
-                            Text("Save & Return to Dashboard")
+                            Text("Save & Return to Studio")
                                 .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
