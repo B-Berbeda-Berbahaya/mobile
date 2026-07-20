@@ -1,92 +1,123 @@
 import SwiftUI
 
+struct GuideStep {
+    let imageURL: String
+    let title: String
+    let description: String
+}
+
 struct GuideObjectView: View {
     let onDismiss: (() -> Void)
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    @StateObject private var viewModel = GuideViewModel()
     let themeBrown = Color(red: 0.45, green: 0.38, blue: 0.28)
-    
-    var body: some View {
-        ZStack {
-            // Dark glassmorphic background overlay
-            Color.black.opacity(0.7)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                Spacer()
-                
-                Text("How to Control Objects")
-                    .font(.system(.headline, design: .rounded))
-                    .fontWeight(.bold)
-                    .padding(.top, 16)
-                
-                VStack(spacing: 10) {
-                    ForEach(viewModel.gestureItems) { item in
-                        GestureGuideRow(imageName: item.imageName, title: item.title, description: item.description)
-                    }
-                }
-                .padding(.horizontal, 16)
-                
-                Spacer()
-                
-                Button(action: onDismiss) {
-                    Text("Understood")
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(themeBrown)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal, 36)
-                .padding(.bottom, 130)
-            }
-            .foregroundStyle(Color.white)
-            .padding(.top, horizontalSizeClass == .compact ? 60 : 20)
-            .adaptiveCardModal(isRegular: horizontalSizeClass == .regular, width: 460, height: 560)
-        }
-    }
-}
 
-struct GestureGuideRow: View {
-    let imageName: String
-    let title: String
-    let description: String
-    
+    @State private var currentIndex = 0
+    @State private var slideEdge: Edge = .trailing
+
+    var steps: [GuideStep] = []
+
     var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: 46, height: 60)
-                
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 22, height: 44)
+        if #available(iOS 26.0, *) {
+            ZStack(alignment: .top) {
+
+                VStack(alignment: .center) {
+                    VStack {
+                        AsyncImage(
+                            url: URL(
+                                string: steps[currentIndex].imageURL
+                            )!
+                        ) { image in
+                            image
+                                .image?
+                                .resizable()
+                                .scaledToFit()
+                        }
+                        .clipShape(
+                            .rect(topLeadingRadius: 16, topTrailingRadius: 16)
+                        )
+                        .frame(width: 480)
+                        .frame(maxHeight: 308, alignment: .top)
+
+                        Group {
+                            Text(steps[currentIndex].title)
+                                .font(Font.largeTitle)
+                                .fontWeight(.semibold)
+
+                            Text(
+                                """
+                                \(steps[currentIndex].description)
+                                """
+                            )
+                            .multilineTextAlignment(.center)
+                        }
+                        .foregroundStyle(Color.primary)
+
+                        Spacer()
+                    }
+                    .id(currentIndex)
+                    .transition(.move(edge: slideEdge).combined(with: .opacity))
+
+                    Spacer()
+
+                    // Continue button
+                    Button {
+                        if currentIndex == steps.count - 1 {
+                            onDismiss()
+                        } else {
+                            slideEdge = .trailing
+                            withAnimation(.easeInOut) {
+                                currentIndex += 1
+                            }
+                        }
+
+                    } label: {
+                        Text(currentIndex == steps.count - 1 ? "I'm understood" : "Continue")
+                                .padding(4)
+                    }
+                    .tint(.brown)
+                    .buttonStyle(.glassProminent)
+                }
+                .padding(.bottom, 24)
+
+                // Bcak button
+                HStack {
+                    if currentIndex > 0 {
+                        Button {
+                            slideEdge = .leading
+                            withAnimation(.easeInOut) {
+                                currentIndex -= 1
+                            }
+                        } label: {
+                            Image(systemName: "chevron.left").padding(8)
+                        }
+                        .buttonBorderShape(.circle)
+                        .buttonStyle(.glass)
+                    }
+
+                    Spacer()
+                }
+                .padding(16)
+
             }
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(.white)
-                
-                Text(description)
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.7))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            
-            Spacer()
+            .frame(width: 480, height: 540)
+            .background(.thinMaterial, in: .rect(cornerRadius: 16))
+            .clipped()
+
+        } else {
+            // Fallback on earlier versions
         }
-        .padding(8)
-        .background(Color.white.opacity(0.03))
-        .cornerRadius(12)
     }
 }
 
 #Preview {
-    GuideObjectView(onDismiss: {})
+    ZStack {
+        Color.gray.ignoresSafeArea()
+        AsyncImage(
+            url: URL(string: "https://picsum.photos/seed/picsum/200/300")
+        ) { image in
+            image.image?.resizable()
+        }
+
+        GuideObjectView(onDismiss: {}, steps: [GuideStep(imageURL: "https://picsum.photos/seed/picsum/480/300", title: "scan", description: "scan description")])
+    }
 }
