@@ -170,8 +170,9 @@ struct LayoutSchematicPreview: View {
                     .foregroundColor(.secondary)
             } else {
                 ForEach(placedObjects, id: \.id) { obj in
-                    let xOffset = CGFloat(obj.gridX) * 28.0
-                    let zOffset = CGFloat(-obj.gridZ) * 24.0
+                    // Map real world coordinates (-1 to 1 meters roughly) to the schematic (-150 to 150 points roughly)
+                    let xOffset = CGFloat(obj.posX) * 150.0
+                    let zOffset = CGFloat(obj.posZ) * 150.0
                     
                     VStack(spacing: 4) {
                         Image(systemName: obj.type.sfSymbol)
@@ -233,8 +234,8 @@ struct DiagnosticRow: View {
 #Preview {
     LayoutSuccessView(
         placedObjects: [
-            PlacedObjectSim(id: UUID(), type: .monitor34, gridX: 0, gridZ: 2, rotation: 0),
-            PlacedObjectSim(id: UUID(), type: .keyboard, gridX: 0, gridZ: 0, rotation: 0)
+            PlacedObjectSim(id: UUID(), type: .monitor34, rotation: 0, posX: 0.0, posZ: -0.2),
+            PlacedObjectSim(id: UUID(), type: .keyboard, rotation: 0, posX: 0.0, posZ: 0.2)
         ],
         onSaveAndExit: {}
     )
