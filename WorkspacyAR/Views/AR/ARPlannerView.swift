@@ -28,7 +28,10 @@ struct ARPlannerView: View {
     @State private var isARMode = true
     @State private var sessionState = "Searching for planes..."
     @State private var showSidebar = false
+    @State private var popoverPosition: CGPoint = .zero
+    @State private var interactionMode: ARInteractionMode = .none
     @State private var showSuccessScreen = false
+    @State private var showClearConfirmation = false
     
     enum OnboardingStep {
         case scanningGuide
@@ -45,6 +48,11 @@ struct ARPlannerView: View {
                     if let coordinator = coordinator {
                         ARContainerView(sessionManager: sessionManager, coordinator: coordinator)
                             .ignoresSafeArea()
+                        
+                        if popoverPosition != .zero {
+                            ARFloatingPopover(coordinator: coordinator, interactionMode: $interactionMode)
+                                .position(popoverPosition)
+                        }
                     } else {
                         Color.black.ignoresSafeArea()
                         ProgressView("Initializing AR Studio...")
@@ -77,7 +85,7 @@ struct ARPlannerView: View {
                     sessionState: sessionState,
                     showSidebar: $showSidebar,
                     onClear: {
-                        clearWorkspace()
+                        showClearConfirmation = true
                     },
                     onFinish: {
                         showSuccessScreen = true
@@ -117,6 +125,7 @@ struct ARPlannerView: View {
                             },
                             onDismiss: {
                                 withAnimation { selectedObject = nil }
+                                coordinator?.deselectCurrentObject()
                             }
                         )
                         .transition(.move(edge: .bottom))
@@ -156,6 +165,65 @@ struct ARPlannerView: View {
                 .transition(.opacity)
                 .zIndex(20)
             }
+            
+            // Custom Confirmation Alert Overlay (Pure SwiftUI to avoid UIKit representable touch bugs)
+            if showClearConfirmation {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .onTapGesture {
+                            withAnimation { showClearConfirmation = false }
+                        }
+                    
+                    VStack(spacing: 20) {
+                        Text("Clear Workspace?")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Are you sure you want to remove all placed objects? This action cannot be undone.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                            }) {
+                                Text("Cancel")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Button(action: {
+                                withAnimation { showClearConfirmation = false }
+                                clearWorkspace()
+                            }) {
+                                Text("Clear All")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.red)
+                                    .cornerRadius(10)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(24)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(radius: 10)
+                    .padding(.horizontal, 30)
+                    .frame(maxWidth: 340)
+                }
+                .ignoresSafeArea()
+                .zIndex(100)
+                .transition(.opacity.combined(with: .scale))
+            }
         }
         .onAppear {
             onboardingStep = .scanningGuide
@@ -167,6 +235,22 @@ struct ARPlannerView: View {
                 NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
             })
         }
+        .onChange(of: selectedObject) { _, newObj in
+            if let newObj = newObj {
+                if coordinator?.selectedPlacedObject?.id != newObj.id {
+                    if let obj = coordinator?.anchorManager.placedObjects.first(where: { $0.id == newObj.id }) {
+                        coordinator?.selectObject(obj)
+                    }
+                }
+            } else {
+                if coordinator?.selectedPlacedObject != nil {
+                    coordinator?.deselectCurrentObject()
+                }
+            }
+        }
+        .onChange(of: interactionMode) { _, newMode in
+            coordinator?.interactionMode = newMode
+        }
     }
     
     // Core actions
@@ -177,6 +261,7 @@ struct ARPlannerView: View {
             coord.onSelectedObjectChanged = { placedObj in
                 if let obj = placedObj {
                     withAnimation {
+                        interactionMode = coord.interactionMode
                         if let index = placedObjects.firstIndex(where: { $0.id == obj.id }) {
                             selectedObject = placedObjects[index]
                         } else {
@@ -193,6 +278,34 @@ struct ARPlannerView: View {
                 } else {
                     withAnimation { selectedObject = nil }
                 }
+            }
+            coord.onPlacedObjectUpdated = { updatedObj in
+                if let index = placedObjects.firstIndex(where: { $0.id == updatedObj.id }) {
+                    let snappedWorldPos = coord.mapper.worldPosition(for: updatedObj.gridCoordinate)
+                    let heightCm = (updatedObj.entity.transform.translation.y - snappedWorldPos.y) * 100.0
+                    
+                    let forward = updatedObj.entity.transform.rotation.act(SIMD3<Float>(0, 0, 1))
+                    let yawAngle = atan2(forward.x, forward.z)
+                    var yawDegrees = yawAngle * 180.0 / .pi
+                    if yawDegrees < 0 {
+                        yawDegrees += 360.0
+                    }
+                    
+                    withAnimation {
+                        interactionMode = coord.interactionMode
+                        placedObjects[index].gridX = updatedObj.gridCoordinate.x
+                        placedObjects[index].gridZ = updatedObj.gridCoordinate.z
+                        placedObjects[index].rotation = yawDegrees
+                        placedObjects[index].heightOffset = heightCm
+                        
+                        if selectedObject?.id == updatedObj.id {
+                            selectedObject = placedObjects[index]
+                        }
+                    }
+                }
+            }
+            coord.onPopoverPositionChanged = { position in
+                popoverPosition = position
             }
             coordinator = coord
         }
