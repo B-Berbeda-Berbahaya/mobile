@@ -28,10 +28,12 @@ struct ARPlannerView: View {
         case scanningGuide
         case completed
     }
+    
     @State private var onboardingStep: OnboardingStep = .scanningGuide
     
     var body: some View {
         ZStack(alignment: .leading) {
+            // Canvas as the background
             // Background Canvas (AR)
             ZStack {
                 if let coordinator = coordinator {
