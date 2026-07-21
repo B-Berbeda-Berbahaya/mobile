@@ -116,7 +116,7 @@ struct ARPlannerView: View {
             if showSidebar {
                 CatalogSidebarView(
                     selectedObjectType: Binding(
-                        get: { selectedObjectType!},
+                        get: { selectedObjectType ?? .macbook16},
                         set: { selectedObjectType = $0 }
                     ),
                     selectedCategory: Binding(
@@ -206,21 +206,8 @@ struct ARPlannerView: View {
                 NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
             })
         }
-//        .onChange(of: selectedObjectType) { _, newValue in
-//            coordinator?.activePlacingType = newValue
-//        }
-        .onChange(of: selectedObject) { _, newObj in
-            if let newObj = newObj {
-                if coordinator?.selectedPlacedObject?.id != newObj.id {
-                    if let obj = coordinator?.anchorManager.placedObjects.first(where: { $0.id == newObj.id }) {
-                        coordinator?.selectObject(obj)
-                    }
-                }
-            } else {
-                if coordinator?.selectedPlacedObject != nil {
-                    coordinator?.deselectCurrentObject()
-                }
-            }
+        .onChange(of: selectedObjectType) { _, newValue in
+            coordinator?.activePlacingType = newValue
         }
     }
     

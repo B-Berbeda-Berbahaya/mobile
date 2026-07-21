@@ -34,7 +34,6 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
     case macbookPro14 = "macbook_pro_14"
     case macbookAir15 = "macbook_air_15"
     case macbook16 = "macbook_16"
-    case macbook16CenterNew = "macbook_16_center_new"
     case iMac24 = "imac_24"
     case studioDisplay27 = "studio_display_27"
     case monitor32 = "monitor_32"
@@ -51,7 +50,6 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .macbookPro14: return "14\" MacBook Pro (M5)"
         case .macbookAir15: return "15\" MacBook Air"
         case .macbook16: return "16\" MacBook Pro"
-        case .macbook16CenterNew: return "16\" MacBook Pro (Center)"
         case .iMac24: return "24\" iMac"
         case .studioDisplay27: return "27\" Studio Display"
         case .monitor32: return "32\" Monitor"
@@ -64,7 +62,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
     
     public var category: ItemCategory {
         switch self {
-        case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16, .macbook16CenterNew:
+        case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16:
             return .laptop
         case .iMac24, .studioDisplay27, .monitor32:
             return .monitor
@@ -85,7 +83,6 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .macbookPro14: return "31.3 x 22.1 x 1.6 cm"
         case .macbookAir15: return "34.0 x 23.8 x 1.2 cm"
         case .macbook16: return "35.6 x 24.8 x 1.7 cm"
-        case .macbook16CenterNew: return "35.6 x 24.8 x 1.7 cm"
         case .iMac24: return "54.7 x 46.1 x 14.7 cm"
         case .studioDisplay27: return "62.3 x 47.8 x 16.8 cm"
         case .monitor32: return "71.4 x 42.4 x 20 cm"
@@ -98,7 +95,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
     
     public var sfSymbol: String {
         switch self {
-        case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16, .macbook16CenterNew:
+        case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16:
             return "laptopcomputer"
         case .iMac24: return "desktopcomputer"
         case .studioDisplay27, .monitor32: return "tv"
@@ -113,7 +110,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         switch self {
         case .macbookAir13, .macbookAir15:
             return "Use a laptop riser along with an external keyboard and mouse to prevent neck strain."
-        case .macbookPro14, .macbook16, .macbook16CenterNew:
+        case .macbookPro14, .macbook16:
             return "Use a laptop riser along with an external keyboard and mouse to prevent neck strain."
         case .iMac24:
             return "The top of the screen should be at or slightly below eye level, at an arm's distance."
@@ -138,7 +135,6 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .macbookPro14: return "14inch_MacBookProM5"
         case .macbookAir15: return "15inch_MacbookAir"
         case .macbook16: return "16inch_Macbook"
-        case .macbook16CenterNew: return "16inch_MacbookCenterNew"
         case .iMac24: return "24inch_iMac"
         case .studioDisplay27: return "27inch_StudioDisplay"
         case .monitor32: return "32inch_Monitor"
