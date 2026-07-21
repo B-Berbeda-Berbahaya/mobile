@@ -24,7 +24,7 @@ struct AdjustItemPopover: View {
     // Calculate simulated ergonomic compliance
     var ergoStatus: (isGood: Bool, title: String, description: String) {
         switch objectType {
-        case .monitor34:
+        case .iMac24, .monitor32:
             if distanceToUser < 50 {
                 return (false, "Monitor Too Close", "Move monitor further away. Recommended eye-to-screen distance is 50-70 cm (currently \(Int(distanceToUser)) cm).")
             } else if distanceToUser > 80 {
@@ -32,13 +32,7 @@ struct AdjustItemPopover: View {
             } else {
                 return (true, "Optimal Placement", "Monitor is at the ideal ergonomic distance (\(Int(distanceToUser)) cm). Make sure the top matches your eye level.")
             }
-        case .ergonomicChair:
-            if relativeHeight < -5 || relativeHeight > 5 {
-                return (false, "Suboptimal Height", "Adjust chair height so feet are flat on the ground and thighs are parallel to the floor.")
-            } else {
-                return (true, "Ideal Settings", "Lumbar support alignment is active. Elbow-to-desk orientation is at a healthy 90-degree angle.")
-            }
-        case .laptop:
+        case .macbook16:
             return (false, "Neck Flexion Risk", "Laptops cause neck strain when used flat. We recommend a laptop stand and external keyboard.")
         default:
             return (true, "Ready to use", "This accessory is placed correctly in your active reach zone.")
@@ -130,7 +124,7 @@ struct AdjustItemPopover: View {
                         }
                         
                         // Specific Ergonomics Controls (e.g., monitor distance to user)
-                        if objectType == .monitor34 {
+                        if objectType == .iMac24 || objectType == .monitor32 {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
                                     Label("Screen-to-Eye Distance", systemImage: "eye")
@@ -262,13 +256,15 @@ struct AdjustItemPopover: View {
     
     private var categoryColor: Color {
         switch objectType.category {
-        case .furniture: return .purple
-        case .devices: return .blue
-        case .accessories: return .orange
+        case .monitor: return .blue
+        case .laptop: return .purple
+        case .keyboard: return .orange
+        case .mouse: return .orange
+        case .deskmat, .accessories: return .gray
         }
     }
 }
 
 #Preview {
-    AdjustItemPopover(objectType: .monitor34)
+    AdjustItemPopover(objectType: .monitor32)
 }

@@ -9,7 +9,7 @@ import Foundation
 
 @Observable
 final class DirectoryViewModel {
-    var sections: [DeskItemSection] = DeskItemSection.mockData // TODO: swap for loader once catalog exists
+    var sections: [DeskItemSection] = DeskItemSection.catalog
     var searchText = ""
     var selectedItem: DeskItem?
 
@@ -25,4 +25,3 @@ final class DirectoryViewModel {
         selectedItem = item
     }
 }
-

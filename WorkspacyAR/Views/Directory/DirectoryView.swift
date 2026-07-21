@@ -8,111 +8,87 @@
 import SwiftUI
 import Foundation
 import Combine
+import RealityKit
+import Workspacy
 
 struct DirectoryView: View {
     @State private var viewModel = DirectoryViewModel()
     var onPlaceItem: ((DeskItem) -> Void)? = nil
 
     var body: some View {
-        GeometryReader { geo in
-            NavigationSplitView {
-                List {
-                    ForEach(viewModel.filteredSections) { section in
-                        Section(section.title) {
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 12) {
-                                ForEach(section.items) { item in
-                                    Button {
-                                        viewModel.select(item)
-                                    } label: {
-                                        DeskItemCard(item: item)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .contentShape(RoundedRectangle(cornerRadius: 20))
-//                                    DeskItemCard(item: item)
-//                                        .onTapGesture { viewModel.select(item) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Studio Catalog")
+                    .font(.system(.title2, design: .rounded))
+                    .fontWeight(.bold)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                
+                ForEach(viewModel.filteredSections) { section in
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(section.title)
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(1)
+                            .padding(.horizontal)
+                        
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
+                            ForEach(section.items) { item in
+                                Button {
+                                    viewModel.select(item)
+                                    onPlaceItem?(item)
+                                } label: {
+                                    DirectoryItemCell(item: item, isSelected: viewModel.selectedItem?.id == item.id)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
+                        .padding(.horizontal)
                     }
                 }
-                .searchable(text: $viewModel.searchText)
-                .navigationTitle("Directory")
-                .navigationSplitViewColumnWidth(geo.size.width * 0.50)
-            } detail: {
-                PreviewPanel(item: viewModel.selectedItem, onPlace: {
-                    if let item = viewModel.selectedItem {
-                        onPlaceItem?(item)
-                    }
-                })
             }
-            .navigationSplitViewStyle(.balanced)
+            .padding(.vertical, 4)
         }
+        .background(.ultraThinMaterial)
+        .searchable(text: $viewModel.searchText)
     }
 }
 
-struct DeskItemCard: View {
+struct DirectoryItemCell: View {
     let item: DeskItem
-    
+    let isSelected: Bool
+
     var body: some View {
-        VStack(spacing: 12) {
-            ZStack{
+        let backgroundColor: Color = isSelected ? Color.accentColor.opacity(0.15) : .clear
+        let iconTint: Color = isSelected ? .accentColor : .primary
+        let containerBackground: Color = isSelected ? Color.accentColor.opacity(0.05) : .clear
+
+        return VStack(spacing: 8) {
+            ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
+                    .fill(backgroundColor)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .frame(height: 64)
+
                 Image(systemName: item.systemImage)
-                    .font(.system(size: 48, weight: .ultraLight))
-                    .scaledToFit()
-                    .frame(width: 56, height: 56)
+                    .font(.title2)
+                    .foregroundStyle(iconTint)
             }
-            .aspectRatio(1.3, contentMode: .fit)
-            
+
             Text(item.name)
-                .font(.headline)
-                .fontWeight(.regular)
+                .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(.primary)
-                .lineLimit(2)
+                .lineLimit(1)
                 .multilineTextAlignment(.center)
         }
-                .padding(12)
-                .background(.background)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-    }
-}
-
-struct PreviewPanel: View {
-    let item: DeskItem?
-    var onPlace: (() -> Void)? = nil
-
-    var body: some View {
-        ZStack {
-            Color(.secondarySystemBackground)
-
-            VStack(spacing: 12) {
-                Image(systemName: "arkit")
-                    .font(.system(size: 64, weight: .thin))
-                    .foregroundStyle(.secondary)
-                Text(item?.name ?? "Select an item to preview")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
-
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button {
-                        onPlace?()
-                    } label: {
-                        Text("Place")
-                            .frame(width: 150, height: 44)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(item == nil)
-                    .padding(24)
-
-                }
-            }
-        }
-        .navigationTitle("Preview")
+        .padding(6)
+        .background(containerBackground)
+        .cornerRadius(14)
     }
 }
 
