@@ -14,12 +14,6 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
     public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
     public var onPopoverPositionChanged: ((CGPoint) -> Void)?
     
-
-    public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
-    public var onPopoverPositionChanged: ((CGPoint) -> Void)?
-    
-    public var activePlacingType: PlaceableObjectType = .macbook16
-    
     public weak var arView: ARView?
     public var selectedPlacedObject: PlacedObject?
     
@@ -138,11 +132,12 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         
         // If we reach here, we are trying to place something
         guard stateManager.isDeskLocked else { return } // Can only place if desk is locked
-        
+        guard let type = activePlacingType else { return } // Tidak ada tipe aktif, tidak bisa place
+
         let hitResults = arView.hitTest(location)
         if let deskHit = hitResults.first(where: { $0.entity.name == "desk_model" }) {
             Task { @MainActor in
-                await placeObject(worldPosition: deskHit.position, type: activePlacingType)
+                await placeObject(worldPosition: deskHit.position, type: type)
             }
         } else {
             // Failed to drop: Spawn invalid ghost
@@ -159,7 +154,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
             }
             
             Task { @MainActor in
-                await spawnInvalidGhost(type: activePlacingType, at: position, in: arView)
+                await spawnInvalidGhost(type: type, at: position, in: arView)
             }
         }
     }
