@@ -1,5 +1,6 @@
 import Foundation
 
+<<<<<<< HEAD
 public enum WorkspacyModels {
     public enum ItemCategory: String, CaseIterable, Identifiable {
         case monitor = "Monitor"
@@ -22,6 +23,7 @@ public enum WorkspacyModels {
         }
     }
 
+<<<<<<< HEAD
     public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case macbookAir13 = "macbook_air_13"
         case macbookPro14 = "macbook_pro_14"
