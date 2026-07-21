@@ -8,12 +8,12 @@ public final class AnchorManager {
     public init() {}
     
     @discardableResult
-    public func placeEntity(_ entity: ModelEntity, at worldTransform: simd_float4x4, in arView: ARView, type: PlaceableObjectType, coordinate: GridCoordinate) -> PlacedObject {
-        let anchorEntity = AnchorEntity(world: worldTransform)
+    public func placeEntity(_ entity: ModelEntity, at worldPosition: SIMD3<Float>, in arView: ARView, type: PlaceableObjectType) -> PlacedObject {
+        let anchorEntity = AnchorEntity(world: worldPosition)
         anchorEntity.addChild(entity)
         arView.scene.addAnchor(anchorEntity)
         
-        let placedObj = PlacedObject(entity: entity, type: type, gridCoordinate: coordinate)
+        let placedObj = PlacedObject(entity: entity, type: type)
         placedObjects.append(placedObj)
         
         return placedObj
