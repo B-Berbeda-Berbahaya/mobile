@@ -18,8 +18,8 @@ struct ARPlannerView: View {
     
     @State private var placedObjects: [PlacedObjectSim] = []
     @State private var selectedObject: PlacedObjectSim? = nil
-    @State private var selectedObjectType: PlaceableObjectType = .macbook16
-    @State private var selectedCategory: ItemCategory = .laptop
+    @State private var selectedObjectType: PlaceableObjectType?
+    @State private var selectedCategory: ItemCategory?
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
@@ -75,7 +75,7 @@ struct ARPlannerView: View {
                 if stateManager.isDeskLocked {
                     if selectedObject == nil {
                         VStack(spacing: 8) {
-                            Text("Pilih letak untuk \(selectedObjectType.displayName)")
+                            Text("Pilih letak untuk \(selectedObjectType?.displayName ?? "item")")
                                 .font(.caption2)
                                 .foregroundColor(.white.opacity(0.9))
                                 .padding(.horizontal, 12)
@@ -115,11 +115,17 @@ struct ARPlannerView: View {
             // Sliding Sidebar Drawer
             if showSidebar {
                 CatalogSidebarView(
-                    selectedObjectType: $selectedObjectType,
-                    selectedCategory: $selectedCategory,
+                    selectedObjectType: Binding(
+                        get: { selectedObjectType!},
+                        set: { selectedObjectType = $0 }
+                    ),
+                    selectedCategory: Binding(
+                        get: { selectedCategory ?? .laptop },
+                        set: { selectedCategory = $0 }
+                    ),
                     onPlaceItem: { item in
-                        selectedObjectType = mapDeskItemToObjectType(item)
-                        selectedCategory = selectedObjectType.category
+                        selectedObjectType = item.objectType
+                        selectedCategory = selectedObjectType?.category
                         withAnimation { showSidebar = false }
                     },
                     onClose: {
@@ -200,6 +206,9 @@ struct ARPlannerView: View {
                 NotificationCenter.default.post(name: NSNotification.Name("SwitchToDashboard"), object: nil)
             })
         }
+//        .onChange(of: selectedObjectType) { _, newValue in
+//            coordinator?.activePlacingType = newValue
+//        }
         .onChange(of: selectedObject) { _, newObj in
             if let newObj = newObj {
                 if coordinator?.selectedPlacedObject?.id != newObj.id {
@@ -299,22 +308,6 @@ struct ARPlannerView: View {
         placedObjects.removeAll(where: { $0.id == obj.id })
         coordinator?.removeObject(withID: obj.id)
         selectedObject = nil
-    }
-    
-    private func mapDeskItemToObjectType(_ item: DeskItem) -> PlaceableObjectType {
-        let name = item.name.lowercased()
-        if name.contains("monitor") {
-            return .monitor32
-        } else if name.contains("imac") {
-            return .iMac24
-        } else if name.contains("macbook") || name.contains("laptop") {
-            return .macbook16
-        } else if name.contains("keyboard") {
-            return .magicKeyboard
-        } else if name.contains("mouse") {
-            return .appleMouse
-        }
-        return .macbook16
     }
 }
 
