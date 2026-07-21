@@ -16,12 +16,16 @@ public final class ARViewCoordinator: NSObject {
     public let mapper: WorldToGridMapper
     
     public var onSelectedObjectChanged: ((PlacedObject?) -> Void)?
+
     public var activePlacingType: PlaceableObjectType?
 
     public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
     public var onPopoverPositionChanged: ((CGPoint) -> Void)?
     
 
+    public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
+    public var onPopoverPositionChanged: ((CGPoint) -> Void)?
+    public var activePlacingType: PlaceableObjectType = .ergonomicChair
     
     public var arView: ARView?
     public var selectedPlacedObject: PlacedObject?
