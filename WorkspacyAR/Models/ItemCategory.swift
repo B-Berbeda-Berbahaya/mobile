@@ -145,12 +145,40 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         }
     }
     
-    public var scaleCorrection: Float {
+    public var scaleCorrection: SIMD3<Float> {
         switch self {
-        case .macbook16: return 1.0
-        case .monitor32: return 50.0
-        case .magicKeyboard: return 50.0
-        default: return 1.0 // TODO: belum diukur, perlu print bounds satu-satu
+        case .macbookAir13:
+            // Target: 30.4 x 21.5 x 1.1 | Actual: 30.212 x 0.621 x 21.221
+            return SIMD3<Float>(1.006, 34.62, 0.0518)
+        case .macbookPro14:
+            // Target: 31.3 x 22.1 x 1.6 | Actual: 31.173 x 21.784 x 1.042
+            return SIMD3<Float>(1.004, 1.014, 1.535)
+        case .macbookAir15:
+            // Target: 34.0 x 23.8 x 1.2 | Actual: 3.805 x 4.345 x 1.588
+            return SIMD3<Float>(8.936, 5.478, 0.756)
+        case .macbook16:
+            // Target: 35.6 x 24.8 x 1.7 | Actual: 35.485 x 33.664 x 23.778
+            return SIMD3<Float>(1.003, 0.737, 0.0715)
+        case .iMac24:
+            // Target: 54.7 x 46.1 x 14.7 | Actual: 14.345 x 13.170 x 1.326
+            return SIMD3<Float>(3.813, 3.501, 11.086)
+        case .studioDisplay27:
+            // Target: 62.3 x 47.8 x 16.8 | Actual: 14.844 x 0.461 x 16.286
+            return SIMD3<Float>(4.196, 103.68, 1.031)
+        case .monitor32:
+            // Target: 71.4 x 42.4 x 20 | Actual: 2.0 x 2.0 x 2.0
+            return SIMD3<Float>(35.7, 21.2, 10.0)
+        case .appleMouse:
+            // Target: 11.3 x 5.7 x 3.4 | Actual: 86.740 x 32.385 x 81.040
+            return SIMD3<Float>(0.1303, 0.1761, 0.0420)
+        case .deskmat:
+            // Target: 70 x 30 (asumsi Y=0.5cm tipis) | Actual: 2.012 x 4.659 x 0.031
+            return SIMD3<Float>(34.79, 0.00107, 96.77)
+        case .magicKeyboard:
+            // Target: 27.9 x 11.5 x 1.1 | Actual: 60.480 x 0.985 x 56.490
+            return SIMD3<Float>(0.4613, 0.1168, 0.01947)
+        case .monitorRaiser:
+            // Target: 70 x 22.5 x 8 | Actual: 0.711 x 0.229 x 0.019
+            return SIMD3<Float>(0.985, 0.983, 4.211)
         }
-    }
-}
+    }}

@@ -13,7 +13,7 @@ public enum PlaceableEntityFactory {
             }
             
             if let firstModelChild = entity.findFirstModelEntity() {
-                firstModelChild.scale = SIMD3<Float>(repeating: type.scaleCorrection)
+                firstModelChild.scale = type.scaleCorrection
                 firstModelChild.generateCollisionShapes(recursive: true)
                 return firstModelChild
             }
