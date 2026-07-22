@@ -80,8 +80,6 @@ public struct ARContainerView: View {
 
             // CONDITIONAL OVERLAYS
             if stateManager.isDeskLocked {
-                lockedOverlay
-            } else {
                 VStack {
                     HStack {
                         Spacer()
