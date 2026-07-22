@@ -11,7 +11,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
     public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
     public var onPopoverPositionChanged: ((CGPoint) -> Void)?
 
-    public var activePlacingType: PlaceableObjectType = .macbook16
+    public var activePlacingType: PlaceableObjectType?
 
     /// Shared ARView class  instance
     public weak var arView: ARView?
