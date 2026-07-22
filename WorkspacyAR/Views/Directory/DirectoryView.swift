@@ -14,16 +14,11 @@ import Workspacy
 struct DirectoryView: View {
     @State private var viewModel = DirectoryViewModel()
     var onPlaceItem: ((DeskItem) -> Void)? = nil
+    @Binding var searchText: String
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Studio Catalog")
-                    .font(.system(.title2, design: .rounded))
-                    .fontWeight(.bold)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                
                 ForEach(viewModel.filteredSections) { section in
                     VStack(alignment: .leading, spacing: 10) {
                         Text(section.title)
@@ -51,8 +46,10 @@ struct DirectoryView: View {
             }
             .padding(.vertical, 4)
         }
-        .background(.ultraThinMaterial)
-        .searchable(text: $viewModel.searchText)
+        .background(Color.clear)
+        .onChange(of: searchText, initial: true) { oldValue, newValue in
+            viewModel.searchText = newValue
+        }
     }
 }
 
@@ -93,5 +90,5 @@ struct DirectoryItemCell: View {
 }
 
 #Preview {
-    DirectoryView()
+    DirectoryView(searchText: .constant(""))
 }

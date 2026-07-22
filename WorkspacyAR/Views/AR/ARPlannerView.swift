@@ -24,6 +24,15 @@ struct ARPlannerView: View {
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
     
+    enum PanelState {
+        case collapsed
+        case expanded
+    }
+    @State private var panelState: PanelState = .expanded
+    @State private var searchText = ""
+    @GestureState private var dragOffset: CGFloat = 0
+    private let collapsedHeight: CGFloat = 160
+    
     enum OnboardingStep {
         case scanningGuide
         case completed
@@ -56,81 +65,165 @@ struct ARPlannerView: View {
                     sessionManager.pauseSession()
                 }
                 
-                // Overlays & UI Controllers
+                // Top Center Instruction Badge
+                VStack {
+                    if stateManager.isDeskLocked && selectedObject == nil {
+                        HStack {
+                            Spacer()
+                            Text("Pilih letak untuk \(selectedObjectType.displayName)")
+                                .font(.system(.caption, design: .rounded))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .applyGlassEffect(in: Capsule())
+                                .shadow(color: Color.black.opacity(0.08), radius: 5, x: 0, y: 2)
+                            Spacer()
+                        }
+                        .padding(.top, 70) // Below top toolbar
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    Spacer()
+                }
+                
+                // Bottom control panel (Commented out / Non-active)
+                /*
                 VStack {
                     Spacer()
-                    
-                    // Bottom control panel
                     if stateManager.isDeskLocked {
-                        if selectedObject == nil {
-                            VStack(spacing: 8) {
-                                Text("Pilih letak untuk \(selectedObjectType.displayName)")
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.9))
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color.black.opacity(0.6))
-                                    .cornerRadius(10)
-                                    .padding(.bottom, 16)
-                            }
-                            .transition(.opacity)
-                        } else {
-                            if let object = selectedObject {
-                                AdjustItemPopover(
-                                    objectType: object.type,
-                                    onRotate: { degrees in
-                                        updateSelected(rotation: degrees)
-                                    },
-                                    onAdjustHeight: { height in
-                                        updateSelected(height: height)
-                                    },
-                                    onNudge: { _ in
-                                        // Nudge not supported in free-form
-                                    },
-                                    onDelete: {
-                                        deleteSelected()
-                                    },
-                                    onDismiss: {
-                                        withAnimation { selectedObject = nil }
-                                        coordinator?.deselectCurrentObject()
-                                    }
-                                )
-                                .transition(.move(edge: .bottom))
-                            }
-                        }
-                    }
-                }
-                
-                // Sliding Sidebar Drawer
-                if showSidebar {
-                    GeometryReader { geo in
-                        let sidebarWidth = geo.size.width * 0.70
-                        HStack(spacing: 0) {
-                            DirectoryView(onPlaceItem: { item in
-                                selectedObjectType = mapDeskItemToObjectType(item)
-                                selectedCategory = selectedObjectType.category
-                                withAnimation { showSidebar = false }
-                            })
-                            .frame(width: sidebarWidth)
-                            
-                            Color.black.opacity(0.35)
-                                .frame(width: geo.size.width - sidebarWidth)
-                                .onTapGesture {
-                                    withAnimation { showSidebar = false }
+                        if let object = selectedObject {
+                            AdjustItemPopover(
+                                objectType: object.type,
+                                onRotate: { degrees in
+                                    updateSelected(rotation: degrees)
+                                },
+                                onAdjustHeight: { height in
+                                    updateSelected(height: height)
+                                },
+                                onNudge: { _ in
+                                    // Nudge not supported in free-form
+                                },
+                                onDelete: {
+                                    deleteSelected()
+                                },
+                                onDismiss: {
+                                    withAnimation { selectedObject = nil }
+                                    coordinator?.deselectCurrentObject()
                                 }
+                            )
+                            .transition(.move(edge: .bottom))
                         }
-                        .ignoresSafeArea(.all, edges: .vertical)
                     }
-                    .transition(.move(edge: .leading))
-                    .zIndex(10)
                 }
+                */
                 
-                // Onboarding Guide Overlay
+                
+                
+                // Floating Resizable Left Directory Panel
+                GeometryReader { geo in
+                    VStack {
+                        Spacer()
+                        HStack {
+                            if showSidebar {
+                                let expandedHeight = geo.size.height - 120
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    // Drag Handle & Header
+                                    HStack {
+                                        Spacer()
+                                        Capsule()
+                                            .fill(Color.secondary.opacity(0.6))
+                                            .frame(width: 40, height: 5)
+                                        Spacer()
+                                    }
+                                    .frame(height: 20)
+                                    .background(Color.white.opacity(0.001)) // Make entire header draggable
+                                    .gesture(
+                                        DragGesture()
+                                            .updating($dragOffset) { value, state, _ in
+                                                state = value.translation.height
+                                            }
+                                            .onEnded { value in
+                                                let dragThreshold: CGFloat = 50
+                                                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                                                    if value.translation.height < -dragThreshold {
+                                                        panelState = .expanded
+                                                    } else if value.translation.height > dragThreshold {
+                                                        panelState = .collapsed
+                                                    }
+                                                }
+                                            }
+                                    )
+                                    .padding(.top, 4)
+                                    
+                                    // Header Title
+                                    Text("Directory Studio")
+                                        .font(.system(.title3, design: .rounded))
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                        .padding(.horizontal, 16)
+                                    
+                                    // Custom Glassmorphic Search Bar
+                                    HStack {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.footnote)
+                                            .foregroundColor(.secondary)
+                                        TextField("Search items...", text: $searchText)
+                                            .font(.system(size: 13))
+                                            .textFieldStyle(.plain)
+                                        if !searchText.isEmpty {
+                                            Button(action: { searchText = "" }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.footnote)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .applyGlassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                    .padding(.horizontal, 16)
+                                    
+                                    // Content Section
+                                    if panelState == .expanded {
+                                        DirectoryView(onPlaceItem: { item in
+                                            selectedObjectType = mapDeskItemToObjectType(item)
+                                            selectedCategory = selectedObjectType.category
+                                        }, searchText: $searchText)
+                                        .transition(.opacity)
+                                    }
+                                    
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(.bottom, 8)
+                                .frame(width: 360, height: currentPanelHeight(expandedHeight: expandedHeight))
+                                .applyGlassEffect(in: RoundedRectangle(cornerRadius: 24))
+                                .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 5)
+                                .padding(.leading, 20)
+                                .padding(.bottom, 20) // Floating on the left bottom
+                                .transition(.move(edge: .leading).combined(with: .opacity))
+                                .zIndex(10)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+                .allowsHitTesting(true)
+                
+                // Onboarding Guide Overlay (Top-Left)
                 if onboardingStep == .scanningGuide {
-                    GuideScanningView(onDismiss: {
-                        withAnimation { onboardingStep = .completed }
-                    })
-                    .transition(.opacity)
+                    VStack {
+                        HStack {
+                            GuideScanningView(onDismiss: {
+                                withAnimation { onboardingStep = .completed }
+                            })
+                            .padding(.leading, 20)
+                            .padding(.top, 70) // Below status bar / navigation toolbar
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
                     .zIndex(20)
                 }
                 
@@ -204,22 +297,22 @@ struct ARPlannerView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .glassEffect(in: Capsule())
+                    .applyGlassEffect(in: Capsule())
                     .shadow(color: Color.black.opacity(0.04), radius: 3)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 8) {
                         Button(action: {
-                            withAnimation { showSidebar.toggle() }
+                            showSidebar.toggle()
                         }) {
-                            Image(systemName: "sidebar.left")
+                            Image(systemName: "plus")
                                 .font(.system(.body, design: .rounded))
                                 .fontWeight(.semibold)
-                                .foregroundColor(showSidebar ? Color(red: 0.45, green: 0.38, blue: 0.28) : .primary)
+                                .foregroundColor(.primary)
                                 .padding(8)
                         }
-                        .glassEffect(in: Circle())
+                        .applyGlassEffect(in: Circle())
                         
                         Button(action: {
                             showClearConfirmation = true
@@ -230,7 +323,6 @@ struct ARPlannerView: View {
                                 .foregroundColor(.red)
                                 .padding(8)
                         }
-                        .glassEffect(in: Circle())
                         
                         Button(action: {
                             showSuccessScreen = true
@@ -241,7 +333,6 @@ struct ARPlannerView: View {
                                 .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
                                 .padding(8)
                         }
-                        .glassEffect(in: Circle())
                     }
                 }
             }
@@ -254,8 +345,20 @@ struct ARPlannerView: View {
                     showSuccessScreen = false
                 })
             }
+            
+            .onChange(of: stateManager.isDeskLocked) { oldValue, newValue in
+                if newValue {
+                    showSidebar = true
+                }
+            }
             .toolbarBackground(.hidden, for: .navigationBar)
         }
+    }
+    
+    private func currentPanelHeight(expandedHeight: CGFloat) -> CGFloat {
+        let baseHeight = (panelState == .expanded) ? expandedHeight : collapsedHeight
+        let calculated = baseHeight - dragOffset
+        return min(max(calculated, collapsedHeight), expandedHeight)
     }
     
     private func initializeCoordinator() {
@@ -358,6 +461,17 @@ struct ARPlannerView: View {
             return .appleMouse
         }
         return .macbook16
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func applyGlassEffect<S: Shape>(in shape: S) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(in: shape)
+        } else {
+            self.background(.ultraThinMaterial, in: shape)
+        }
     }
 }
 

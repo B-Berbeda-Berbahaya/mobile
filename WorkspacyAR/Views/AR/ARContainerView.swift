@@ -137,12 +137,11 @@ public struct ARContainerView: View {
                         }) {
                             Image(systemName: "lock.open.fill")
                                 .font(.body)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .padding(12)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
-                                .shadow(radius: 4)
                         }
+                        .applyGlassEffect(in: Circle())
+                        .shadow(radius: 4)
                         .padding(.top, 60)
                         .padding(.trailing, 20)
                     }
@@ -160,11 +159,10 @@ public struct ARContainerView: View {
                         }) {
                             Image(systemName: "trash")
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .gray : .white)
+                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .secondary : .red)
                                 .frame(width: 50, height: 50)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
                         }
+                        .applyGlassEffect(in: Circle())
                         .disabled(stateManager.calibrationPoints.isEmpty)
                         
                         Button(action: {
@@ -172,12 +170,11 @@ public struct ARContainerView: View {
                         }) {
                             Image(systemName: "plus")
                                 .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(.black)
+                                .foregroundColor(stateManager.focus3DPosition != nil ? .primary : .secondary)
                                 .frame(width: 60, height: 60)
-                                .background(stateManager.focus3DPosition != nil ? Color.white : Color.white.opacity(0.6))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                         }
+                        .applyGlassEffect(in: Circle())
+                        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                         .disabled(stateManager.focus3DPosition == nil)
                         
                         Button(action: {
@@ -185,11 +182,10 @@ public struct ARContainerView: View {
                         }) {
                             Image(systemName: "arrow.uturn.backward")
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .gray : .white)
+                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .secondary : .primary)
                                 .frame(width: 50, height: 50)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
                         }
+                        .applyGlassEffect(in: Circle())
                         .disabled(stateManager.calibrationPoints.isEmpty)
                     }
                     .padding(.trailing, 24)
@@ -207,14 +203,13 @@ public struct ARContainerView: View {
                                 Text("Selesai")
                                     .font(.headline)
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
                             .padding(.horizontal, 32)
                             .padding(.vertical, 14)
-                            .background(Color.blue)
-                            .cornerRadius(25)
-                            .shadow(radius: 5)
-                            .transition(.scale.combined(with: .opacity))
                         }
+                        .applyGlassEffect(in: Capsule())
+                        .shadow(radius: 5)
+                        .transition(.scale.combined(with: .opacity))
                         .padding(.bottom, 120) // Supaya tidak tertutup toolbar bawah Planner
                     }
                 }
