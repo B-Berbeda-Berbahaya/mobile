@@ -45,236 +45,342 @@ struct ARPlannerView: View {
     @State private var onboardingStep: OnboardingStep = .scanningGuide
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Canvas as the background
-            // Background Canvas (AR)
-            ZStack {
-                if let coordinator = coordinator {
-                    ARContainerView(
-                        sessionManager: sessionManager,
-                        coordinator: coordinator,
-                        stateManager: stateManager,
-                        isOnboardingFinished: onboardingStep == .completed
-                    )
-                    .ignoresSafeArea()
-
-                    if stateManager.popoverPosition != .zero {
-                        ARFloatingPopover(
+        NavigationStack {
+            ZStack(alignment: .leading) {
+                // Background Canvas (AR)
+                ZStack {
+                    if let coordinator = coordinator {
+                        ARContainerView(
+                            sessionManager: sessionManager,
                             coordinator: coordinator,
-                            stateManager: stateManager
+                            stateManager: stateManager,
+                            isOnboardingFinished: onboardingStep == .completed
                         )
-                        .position(stateManager.popoverPosition)
-                    }
-                } else {
-                    Color.black.ignoresSafeArea()
-                    ProgressView("Initializing AR Studio...")
-                        .foregroundColor(.white)
-                }
-            }
-            .onAppear {
-                sessionManager.startSession()
-            }
-            .onDisappear {
-                sessionManager.pauseSession()
-            }
+                        .ignoresSafeArea()
 
-            // Overlays & UI Controllers
-            VStack {
-                if onboardingStep != .scanningGuide {
-                    // Top Toolbar
-                    PlannerToolbar(
-                        sessionState: stateManager.isDeskLocked
-                            ? "Meja Terkunci - Tap untuk menaruh objek"
-                            : "Buat Area Meja",
-                        showSidebar: $showSidebar,
-                        onClear: {
-                            showClearConfirmation = true
-                        },
-                        onFinish: {
-                            showSuccessScreen = true
-                        }
-                    )
-                }
-
-                Spacer()
-
-                // Bottom control panel
-                if stateManager.isDeskLocked {
-                    if selectedObject == nil {
-                        VStack(spacing: 8) {
-                            Text(
-                                "Pilih letak untuk \(selectedObjectType.displayName)"
+                        if stateManager.popoverPosition != .zero {
+                            ARFloatingPopover(
+                                coordinator: coordinator,
+                                stateManager: stateManager
                             )
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(10)
-                            .padding(.bottom, 16)
+                            .position(stateManager.popoverPosition)
                         }
-                        .transition(.opacity)
+                    } else {
+                        Color.black.ignoresSafeArea()
+                        ProgressView("Initializing AR Studio...")
+                            .foregroundColor(.white)
                     }
-                    //                    else {
-                    //                        if let object = selectedObject {
-                    //                            AdjustItemPopover(
-                    //                                objectType: object.type,
-                    //                                onRotate: { degrees in
-                    //                                    updateSelected(rotation: degrees)
-                    //                                },
-                    //                                onAdjustHeight: { height in
-                    //                                    updateSelected(height: height)
-                    //                                },
-                    //                                onNudge: { _ in
-                    //                                    // Nudge not supported in free-form
-                    //                                },
-                    //                                onDelete: {
-                    //                                    deleteSelected()
-                    //                                },
-                    //                                onDismiss: {
-                    //                                    withAnimation { selectedObject = nil }
-                    //                                    coordinator?.deselectCurrentObject()
-                    //                                }
-                    //                            )
-                    //                            .transition(.move(edge: .bottom))
-                    //                        }
-                    //                    }
                 }
-            }
+                .onAppear {
+                    sessionManager.startSession()
+                }
+                .onDisappear {
+                    sessionManager.pauseSession()
+                }
 
-            // Sliding Sidebar Drawer
-            if showSidebar {
-                CatalogSidebarView(
-                    selectedObjectType: $selectedObjectType,
-                    selectedCategory: $selectedCategory,
-                    onPlaceItem: { item in
-                        selectedObjectType = mapDeskItemToObjectType(item)
-                        selectedCategory = selectedObjectType.category
-                        withAnimation { showSidebar = false }
-                    },
-                    onClose: {
-                        withAnimation { showSidebar = false }
+                // Top Center Instruction Badge
+                VStack {
+                    if stateManager.isDeskLocked && selectedObject == nil {
+                        HStack {
+                            Spacer()
+                            Text("Pilih letak untuk \(selectedObjectType.displayName)")
+                                .font(.system(.caption, design: .rounded))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .applyGlassEffect(in: Capsule())
+                                .shadow(color: Color.black.opacity(0.08), radius: 5, x: 0, y: 2)
+                            Spacer()
+                        }
+                        .padding(.top, 70) // Below top toolbar
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                )
-                .transition(.move(edge: .leading))
-                .zIndex(10)
-            }
+                    Spacer()
+                }
 
-            // Onboarding Guide Overlay
-            if onboardingStep == .scanningGuide {
-                ZStack(alignment: .center) {
-                    HStack {
+                // Floating Resizable Left Directory Panel
+                GeometryReader { geo in
+                    VStack {
+                        Spacer()
+                        HStack {
+                            if showSidebar {
+                                let expandedHeight = geo.size.height - 120
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    // Drag Handle & Header
+                                    HStack {
+                                        Spacer()
+                                        Capsule()
+                                            .fill(Color.secondary.opacity(0.6))
+                                            .frame(width: 40, height: 5)
+                                        Spacer()
+                                    }
+                                    .frame(height: 20)
+                                    .background(Color.white.opacity(0.001)) // Make entire header draggable
+                                    .gesture(
+                                        DragGesture()
+                                            .updating($dragOffset) { value, state, _ in
+                                                state = value.translation.height
+                                            }
+                                            .onEnded { value in
+                                                let dragThreshold: CGFloat = 50
+                                                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                                                    if value.translation.height < -dragThreshold {
+                                                        panelState = .expanded
+                                                    } else if value.translation.height > dragThreshold {
+                                                        panelState = .collapsed
+                                                    }
+                                                }
+                                            }
+                                    )
+                                    .padding(.top, 4)
+                                    
+                                    // Header Title
+                                    Text("Directory Studio")
+                                        .font(.system(.title3, design: .rounded))
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
+                                        .padding(.horizontal, 16)
+                                    
+                                    // Custom Glassmorphic Search Bar
+                                    HStack {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.footnote)
+                                            .foregroundColor(.secondary)
+                                        TextField("Search items...", text: $searchText)
+                                            .font(.system(size: 13))
+                                            .textFieldStyle(.plain)
+                                        if !searchText.isEmpty {
+                                            Button(action: { searchText = "" }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .font(.footnote)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .applyGlassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                    .padding(.horizontal, 16)
+                                    
+                                    // Content Section
+                                    if panelState == .expanded {
+                                        DirectoryView(onPlaceItem: { item in
+                                            selectedObjectType = mapDeskItemToObjectType(item)
+                                            selectedCategory = selectedObjectType.category
+                                        }, searchText: $searchText)
+                                        .transition(.opacity)
+                                    }
+                                    
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(.bottom, 8)
+                                .frame(width: 360, height: currentPanelHeight(expandedHeight: expandedHeight))
+                                .applyGlassEffect(in: RoundedRectangle(cornerRadius: 24))
+                                .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 5)
+                                .padding(.leading, 20)
+                                .padding(.bottom, 20) // Floating on the left bottom
+                                .transition(.move(edge: .leading).combined(with: .opacity))
+                                .zIndex(10)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+                .allowsHitTesting(true)
+
+                // 1. Onboarding Tutorial Dialog (Centered Popup)
+                if onboardingStep == .scanningGuide {
+                    ZStack {
+                        Color.black.opacity(0.45)
+                            .ignoresSafeArea()
+                        
                         GuideObjectView(
                             onDismiss: {
                                 withAnimation { onboardingStep = .completed }
                             },
                             steps: [
                                 GuideStep(
-                                    imageURL:
-                                        "https://picsum.photos/seed/picsum/480/300",
-                                    title: "scan",
-                                    description: "scan description"
+                                    imageURL: "https://picsum.photos/seed/picsum/480/300",
+                                    title: "Scan Area Meja",
+                                    description: "Gerakkan perangkat Anda secara perlahan untuk mendeteksi permukaan meja kerja Anda."
                                 ),
                                 GuideStep(
-                                    imageURL:
-                                        "https://picsum.photos/seed/picsum/300/300",
-                                    title: "place",
-                                    description: "place description"
-                                ),
+                                    imageURL: "https://picsum.photos/seed/picsum/300/300",
+                                    title: "Tempatkan Produk",
+                                    description: "Pilih produk dari katalog studio di bawah dan tempatkan pada area meja yang terdeteksi."
+                                )
                             ]
                         )
                     }
-                    .frame(maxWidth: .infinity)
+                    .transition(.opacity)
+                    .zIndex(30)
                 }
 
-                //                GuideScanningView(onDismiss: {
-                //                    withAnimation { onboardingStep = .completed }
-                //                })
-                //                .transition(.opacity)
-                //                .zIndex(20)
-            }
-
-            // Custom Confirmation Alert Overlay
-            if showClearConfirmation {
-                ZStack {
-                    Color.black.opacity(0.4)
-                        .onTapGesture {
-                            withAnimation { showClearConfirmation = false }
+                // 2. Compact Floating Scanning Guide (Top-Left)
+                if onboardingStep == .completed && !stateManager.isDeskLocked {
+                    VStack {
+                        HStack {
+                            GuideScanningView(onDismiss: {
+                                withAnimation { stateManager.setDeskLock(true) }
+                            })
+                            .padding(.leading, 10)
+                            Spacer()
                         }
+                        Spacer()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(20)
+                }
 
-                    VStack(spacing: 20) {
-                        Text("Hapus Semua?")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                // Custom Confirmation Alert Overlay
+                if showClearConfirmation {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .onTapGesture {
+                                withAnimation { showClearConfirmation = false }
+                            }
 
-                        Text("Area meja dan objek akan dihapus. Lanjutkan?")
-                            .font(.subheadline)
+                        VStack(spacing: 20) {
+                            Text("Hapus Semua?")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+
+                            Text("Area meja dan objek akan dihapus. Lanjutkan?")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+
+                            HStack(spacing: 16) {
+                                Button("Batal") {
+                                    withAnimation { showClearConfirmation = false }
+                                }
+                                .foregroundColor(.primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    Color(.secondarySystemGroupedBackground)
+                                )
+                                .cornerRadius(10)
+
+                                Button("Hapus") {
+                                    withAnimation { showClearConfirmation = false }
+                                    clearWorkspace()
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.red)
+                                .cornerRadius(10)
+                            }
+                        }
+                        .padding(24)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(20)
+                        .shadow(radius: 10)
+                        .padding(.horizontal, 30)
+                        .frame(maxWidth: 340)
+                    }
+                    .ignoresSafeArea()
+                    .zIndex(100)
+                    .transition(.opacity.combined(with: .scale))
+                }
+            }
+            .onAppear {
+                onboardingStep = .scanningGuide
+                initializeCoordinator()
+            }
+            .fullScreenCover(isPresented: $showSuccessScreen) {
+                LayoutSuccessView(
+                    placedObjects: placedObjects,
+                    onSaveAndExit: {
+                        showSuccessScreen = false
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("SwitchToDashboard"),
+                            object: nil
+                        )
+                    }
+                )
+            }
+            .onChange(of: selectedObject) { _, newObj in
+                if let newObj = newObj {
+                    if coordinator?.selectedPlacedObject?.id != newObj.id {
+                        if let obj = coordinator?.anchorManager.placedObjects.first(
+                            where: { $0.id == newObj.id })
+                        {
+                            coordinator?.selectObject(obj)
+                        }
+                    }
+                } else {
+                    if coordinator?.selectedPlacedObject != nil {
+                        coordinator?.deselectCurrentObject()
+                    }
+                }
+            }
+            .onChange(of: stateManager.isDeskLocked) { isLocked in
+                if isLocked {
+                    showSidebar = true
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(stateManager.isDeskLocked ? Color.green : Color.orange)
+                            .frame(width: 8, height: 8)
+                        Text("AR STUDIO")
+                            .font(.system(size: 8, weight: .bold))
                             .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-
-                        HStack(spacing: 16) {
-                            Button("Batal") {
-                                withAnimation { showClearConfirmation = false }
-                            }
+                        
+                        Text("•")
+                            .foregroundColor(.secondary)
+                        
+                        Text(stateManager.isDeskLocked ? "Meja Terkunci - Tap untuk menaruh objek" : "Buat Area Meja")
+                            .font(.system(size: 8, weight: .bold))
                             .foregroundColor(.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                Color(.secondarySystemGroupedBackground)
-                            )
-                            .cornerRadius(10)
-
-                            Button("Hapus") {
-                                withAnimation { showClearConfirmation = false }
-                                clearWorkspace()
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.red)
-                            .cornerRadius(10)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .applyGlassEffect(in: Capsule())
+                    .shadow(color: Color.black.opacity(0.04), radius: 3)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            showSidebar.toggle()
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.system(.body, design: .rounded))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .padding(8)
                         }
+                        .applyGlassEffect(in: Circle())
+                        
+                        Button(action: {
+                            showClearConfirmation = true
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.system(.body, design: .rounded))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.red)
+                                .padding(8)
+                        }
+                        .applyGlassEffect(in: Circle())
+                        
+                        Button(action: {
+                            showSuccessScreen = true
+                        }) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(.body, design: .rounded))
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
+                                .padding(8)
+                        }
+                        .applyGlassEffect(in: Circle())
                     }
-                    .padding(24)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(20)
-                    .shadow(radius: 10)
-                    .padding(.horizontal, 30)
-                    .frame(maxWidth: 340)
-                }
-                .ignoresSafeArea()
-                .zIndex(100)
-                .transition(.opacity.combined(with: .scale))
-            }
-        }
-        .onAppear {
-            onboardingStep = .scanningGuide
-            initializeCoordinator()
-        }
-        .fullScreenCover(isPresented: $showSuccessScreen) {
-            LayoutSuccessView(
-                placedObjects: placedObjects,
-                onSaveAndExit: {
-                    showSuccessScreen = false
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("SwitchToDashboard"),
-                        object: nil
-                    )
-                }
-            )
-        }
-        .onChange(of: selectedObject) { _, newObj in
-            if let newObj = newObj {
-                if coordinator?.selectedPlacedObject?.id != newObj.id {
-                    if let obj = coordinator?.anchorManager.placedObjects.first(
-                        where: { $0.id == newObj.id })
-                    {
-                        coordinator?.selectObject(obj)
-                    }
-                }
-            } else {
-                if coordinator?.selectedPlacedObject != nil {
-                    coordinator?.deselectCurrentObject()
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -421,80 +527,6 @@ extension View {
             self.glassEffect(in: shape)
         } else {
             self.background(.ultraThinMaterial, in: shape)
-// Sub-component: Planner toolbar header
-struct PlannerToolbar: View {
-    let sessionState: String
-    @Binding var showSidebar: Bool
-    var onClear: () -> Void
-    var onFinish: () -> Void
-
-    var body: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 8, height: 8)
-                Text("AR CAMERA")
-                    .font(.caption2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-
-                Text("•")
-                    .foregroundColor(.secondary)
-
-                Text(sessionState)
-                    .font(.caption2)
-                    .foregroundColor(.primary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(.systemBackground).opacity(0.85))
-            .cornerRadius(20)
-            .shadow(color: Color.black.opacity(0.05), radius: 5)
-
-            Spacer()
-
-            HStack(spacing: 8) {
-                Button(action: {
-                    withAnimation { showSidebar.toggle() }
-                }) {
-                    Image(systemName: "sidebar.left")
-                        .font(.title3)
-                        .padding(8)
-                        .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(
-                            showSidebar
-                                ? Color(red: 0.45, green: 0.38, blue: 0.28)
-                                : .primary
-                        )
-                        .clipShape(Circle())
-                }
-
-                Button(action: onClear) {
-                    Image(systemName: "trash")
-                        .font(.title3)
-                        .padding(8)
-                        .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(.red)
-                        .clipShape(Circle())
-                }
-
-                Button(action: onFinish) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .padding(8)
-                        .background(Color(.systemBackground).opacity(0.85))
-                        .foregroundColor(
-                            Color(red: 0.42, green: 0.55, blue: 0.44)
-                        )
-                        .clipShape(Circle())
-                }
-            }
-            .shadow(color: Color.black.opacity(0.05), radius: 5)
         }
     }
-}
-
-#Preview {
-    ARPlannerView()
 }
