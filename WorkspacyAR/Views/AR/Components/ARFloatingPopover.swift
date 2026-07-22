@@ -2,7 +2,7 @@ import SwiftUI
 
 public struct ARFloatingPopover: View {
     public let coordinator: ARViewCoordinator
-    @ObservedObject public var stateManager: StateManager
+    @State public var stateManager: StateManager
     
     public init(coordinator: ARViewCoordinator, stateManager: StateManager) {
         self.coordinator = coordinator
@@ -17,9 +17,9 @@ public struct ARFloatingPopover: View {
                 color: stateManager.interactionMode == .move ? .green : .gray
             ) {
                 if stateManager.interactionMode == .move {
-                    stateManager.interactionMode = .none
+                    stateManager.setInteractionMode(.none)
                 } else {
-                    stateManager.interactionMode = .move
+                    stateManager.setInteractionMode(.move)
                 }
             }
             
@@ -29,9 +29,9 @@ public struct ARFloatingPopover: View {
                 color: stateManager.interactionMode == .rotate ? .blue : .gray
             ) {
                 if stateManager.interactionMode == .rotate {
-                    stateManager.interactionMode = .none
+                    stateManager.setInteractionMode(.none)
                 } else {
-                    stateManager.interactionMode = .rotate
+                    stateManager.setInteractionMode(.rotate)
                 }
             }
             
@@ -40,7 +40,8 @@ public struct ARFloatingPopover: View {
                 if let object = coordinator.selectedPlacedObject {
                     coordinator.removeObject(withID: object.id)
                     stateManager.popoverPosition = .zero
-                    stateManager.interactionMode = .none
+                    stateManager.setInteractionMode(.none)
+
                 }
             }
         }

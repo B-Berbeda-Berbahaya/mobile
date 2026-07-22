@@ -31,7 +31,9 @@ public enum ItemCategory: String, CaseIterable, Identifiable {
 
 public enum PlaceableObjectType: String, CaseIterable, Identifiable {
     case macbookAir13 = "macbook_air_13"
+    case macbookAir13new = "newmac13inch"
     case macbookPro14 = "macbook_pro_14"
+    
     case macbookAir15 = "macbook_air_15"
     case macbook16 = "macbook_16"
     case iMac24 = "imac_24"
@@ -57,12 +59,17 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .deskmat: return "Desk Mat"
         case .magicKeyboard: return "Magic Keyboard"
         case .monitorRaiser: return "Monitor Raiser"
+        default: return "unknown"
         }
     }
     
     public var category: ItemCategory {
         switch self {
+<<<<<<< HEAD
         case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16:
+=======
+        case .macbookAir13, .macbookPro14, .macbookAir15, .macbook16, .macbook16CenterNew, .macbookAir13new:
+>>>>>>> d01692b (F/30 object anchor handling (#31))
             return .laptop
         case .iMac24, .studioDisplay27, .monitor32:
             return .monitor
@@ -90,6 +97,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .deskmat: return "70 x 30 cm"
         case .magicKeyboard: return "27.9 x 11.5 x 1.1 cm"
         case .monitorRaiser: return "70 x 22.5 x 8 cm"
+        default: return "unknown"
         }
     }
     
@@ -103,6 +111,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .deskmat: return "rectangle.3.offgrid.fill"
         case .magicKeyboard: return "keyboard"
         case .monitorRaiser: return "square.stack.3d.up"
+        default: return "unknown"
         }
     }
     
@@ -126,6 +135,7 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
             return "Keep the keyboard flat or slightly tilted away from you to keep your wrists in a neutral position."
         case .monitorRaiser:
             return "Raise your monitor so the top of the screen sits at or slightly below eye level."
+        default: return "unknown"
         }
     }
     
@@ -142,9 +152,11 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .deskmat: return "deskmat30x70"
         case .magicKeyboard: return "MagicKeyboardMac"
         case .monitorRaiser: return "MonitorRaiser_70x22,5x8"
+        case .macbookAir13new: return "newmac13inch"
         }
     }
     
+<<<<<<< HEAD
     public var scaleCorrection: SIMD3<Float> {
         switch self {
         case .macbookAir13:
@@ -182,3 +194,20 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
             return SIMD3<Float>(0.985, 0.983, 4.211)
         }
     }}
+=======
+    
+    
+    public var scaleCorrection: SIMD3<Float> {
+        switch self {
+//        case .macbook16: return 10.0
+        case .macbook16: return SIMD3<Float>(1.003, 0.737, 0.0715)
+        case .macbookAir13new: return SIMD3<Float>(1,1,1)
+//        case .macbook16CenterNew: return 1.0
+//        case .monitor32: return 50.0
+//        case .magicKeyboard: return 50.0
+//        default: return 1.0 // TODO: belum diukur, perlu print bounds satu-satu
+        default : return SIMD3<Float>(1, 1, 1)
+        }
+    }
+}
+>>>>>>> d01692b (F/30 object anchor handling (#31))

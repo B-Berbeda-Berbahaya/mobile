@@ -1,31 +1,65 @@
-import SwiftUI
-import RealityKit
 import Combine
+import RealityKit
+import SwiftUI
 
-public enum ARInteractionMode {
-    case none
-    case move
-    case rotate
-}
+@Observable
+public final class StateManager {
+    public var popoverPosition: CGPoint = .zero
+    public var selectedEntity: ModelEntity? = nil
 
-public class StateManager: ObservableObject {
-    @Published public var popoverPosition: CGPoint = .zero
-    @Published public var selectedEntity: ModelEntity? = nil
-    @Published public var interactionMode: ARInteractionMode = .none
-    
-    @Published public var isDeskDetected: Bool = false
-    @Published public var isDeskLocked: Bool = false
-    
+    // Interaction Mode
+    public var interactionModeRequest: ((ARInteractionMode) -> Void)?
+    private(set) var interactionMode: ARInteractionMode = .none
+    func setInteractionMode(_ mode: ARInteractionMode) {
+        self.interactionMode = mode
+
+        interactionModeRequest?(mode)
+    }
+
+    // MARK: Desk detector and locker
+    public var isDeskDetected: Bool = false
+    public var onDescLocked: ((Bool) -> Void)?
+    private(set) var isDeskLocked: Bool = false
+    func setDeskLock(_ value: Bool) {
+        isDeskLocked = value
+    }
+
     // Manual Calibration & Table Detection
-    @Published public var calibrationPoints: [SIMD3<Float>] = []
-    @Published public var focus3DPosition: SIMD3<Float>? = nil
-    @Published public var isFocusOnTable: Bool = false
-    @Published public var detectedPlaneType: String = "Mencari bidang..."
-    
+    public var calibrationPoints: [SIMD3<Float>] = []
+    public var focus3DPosition: SIMD3<Float>? = nil
+    public var isFocusOnTable: Bool = false
+    public var detectedPlaneType: String = "Mencari bidang..."
+
     // Triggers
-    @Published public var shouldAddPointTrigger: Bool = false
-    @Published public var shouldUndoPointTrigger: Bool = false
-    @Published public var shouldResetTrigger: Bool = false
-    
+    // Add point
+    public var onAddPointRequested: (() -> Void)?
+    private(set) var isAddingPoint: Bool = false
+    func setIsAddingPoint(_ value: Bool) {
+        isAddingPoint = value
+    }
+
+    // Undo point addition
+    public var onUndoPointTrigger: (() -> Void)?
+    private(set) var canUndo: Bool = false {
+        didSet {
+            onUndoPointTrigger?()
+        }
+    }
+    func setCanUndo(_ value: Bool) {
+        canUndo = value
+    }
+
+    // Rest point addition
+    public var onResetTrigger: (() -> Void)?
+    private(set) var canReset: Bool = false {
+        didSet {
+            onResetTrigger?()
+        }
+    }
+    func setCanReset(_ value: Bool) {
+        canReset = value
+    }
+
     public init() {}
+
 }
