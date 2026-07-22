@@ -245,6 +245,15 @@ struct ARPlannerView: View {
                     }
                 }
             }
+            .onAppear {
+                onboardingStep = .scanningGuide
+                initializeCoordinator()
+            }
+            .fullScreenCover(isPresented: $showSuccessScreen) {
+                LayoutSuccessView(placedObjects: placedObjects, onSaveAndExit: {
+                    showSuccessScreen = false
+                })
+            }
             .toolbarBackground(.hidden, for: .navigationBar)
         }
     }
