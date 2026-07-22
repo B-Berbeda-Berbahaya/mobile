@@ -17,8 +17,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3D8F8433300611870080ADB9 /* WorkspacyAR */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = WorkspacyAR;
 			sourceTree = "<group>";
 		};

@@ -82,30 +82,18 @@ public struct ARContainerView: View {
             if stateManager.isDeskLocked {
                 lockedOverlay
             } else {
-                if isOnboardingFinished {
-                    unlockedCalibrationOverlay
-                }
-            }
-        }
-    }
-
-    // MARK: - Subviews
-
-    @ViewBuilder
-    private var lockedOverlay: some View {
-        // Mode Terkunci: Tombol Unlock di kanan atas
-        VStack {
-            HStack {
-                Spacer()
-                Button(action: {
-                    withAnimation { stateManager.setDeskLock(false) }
-                }) {
-                    Image(systemName: "lock.open.fill")
-                        .font(.body)
-                        .foregroundColor(.white)
-                        .padding(12)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Circle())
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            withAnimation { stateManager.isDeskLocked = false }
+                        }) {
+                            Image(systemName: "lock.open.fill")
+                                .font(.body)
+                                .foregroundColor(.primary)
+                                .padding(12)
+                        }
+                        .applyGlassEffect(in: Circle())
                         .shadow(radius: 4)
                 }
                 .padding(.top, 60)

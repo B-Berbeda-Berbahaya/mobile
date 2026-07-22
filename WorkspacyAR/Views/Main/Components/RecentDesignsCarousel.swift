@@ -1,3 +1,4 @@
+/*
 import SwiftUI
 
 struct RecentDesignsCarousel: View {
@@ -45,7 +46,7 @@ struct RecentDesignsCarousel: View {
                             Spacer()
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(design.name)
+                                text(design.name)
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(.primary)
                                     .lineLimit(1)
@@ -76,3 +77,4 @@ struct RecentDesignsCarousel: View {
     .padding()
     .background(Color(.systemGroupedBackground))
 }
+*/
