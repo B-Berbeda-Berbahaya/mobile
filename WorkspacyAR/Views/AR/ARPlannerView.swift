@@ -527,6 +527,76 @@ extension View {
             self.glassEffect(in: shape)
         } else {
             self.background(.ultraThinMaterial, in: shape)
+// Sub-component: Planner toolbar header
+struct PlannerToolbar: View {
+    let sessionState: String
+    @Binding var showSidebar: Bool
+    var onClear: () -> Void
+    var onFinish: () -> Void
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                Text("AR CAMERA")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Text("•")
+                    .foregroundColor(.secondary)
+
+                Text(sessionState)
+                    .font(.caption2)
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(.systemBackground).opacity(0.85))
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.05), radius: 5)
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                Button(action: {
+                    withAnimation { showSidebar.toggle() }
+                }) {
+                    Image(systemName: "sidebar.left")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(
+                            showSidebar
+                                ? Color(red: 0.45, green: 0.38, blue: 0.28)
+                                : .primary
+                        )
+                        .clipShape(Circle())
+                }
+
+                Button(action: onClear) {
+                    Image(systemName: "trash")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(.red)
+                        .clipShape(Circle())
+                }
+
+                Button(action: onFinish) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .padding(8)
+                        .background(Color(.systemBackground).opacity(0.85))
+                        .foregroundColor(
+                            Color(red: 0.42, green: 0.55, blue: 0.44)
+                        )
+                        .clipShape(Circle())
+                }
+            }
+            .shadow(color: Color.black.opacity(0.05), radius: 5)
         }
     }
 }
