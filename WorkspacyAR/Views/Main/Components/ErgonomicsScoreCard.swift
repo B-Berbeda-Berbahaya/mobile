@@ -1,3 +1,4 @@
+/*
 import SwiftUI
 
 struct ErgonomicsScoreCard: View {
@@ -59,3 +60,4 @@ struct ErgonomicsScoreCard: View {
         .padding()
         .background(Color(.systemGroupedBackground))
 }
+*/

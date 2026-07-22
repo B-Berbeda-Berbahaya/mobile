@@ -28,7 +28,20 @@ struct ARPlannerView: View {
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
-
+    
+    enum PanelState {
+        case collapsed
+        case expanded
+    }
+    @State private var panelState: PanelState = .expanded
+    @State private var searchText = ""
+    @GestureState private var dragOffset: CGFloat = 0
+    private let collapsedHeight: CGFloat = 160
+    
+    enum OnboardingStep {
+        case scanningGuide
+        case completed
+    }
     @State private var onboardingStep: OnboardingStep = .scanningGuide
 
     var body: some View {
@@ -264,9 +277,16 @@ struct ARPlannerView: View {
                     coordinator?.deselectCurrentObject()
                 }
             }
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
     }
-
+    
+    private func currentPanelHeight(expandedHeight: CGFloat) -> CGFloat {
+        let baseHeight = (panelState == .expanded) ? expandedHeight : collapsedHeight
+        let calculated = baseHeight - dragOffset
+        return min(max(calculated, collapsedHeight), expandedHeight)
+    }
+    
     private func initializeCoordinator() {
         if coordinator == nil {
             let coord = ARViewCoordinator(stateManager: stateManager)
@@ -394,6 +414,13 @@ struct ARPlannerView: View {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func applyGlassEffect<S: Shape>(in shape: S) -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(in: shape)
+        } else {
+            self.background(.ultraThinMaterial, in: shape)
 // Sub-component: Planner toolbar header
 struct PlannerToolbar: View {
     let sessionState: String
@@ -465,8 +492,6 @@ struct PlannerToolbar: View {
             }
             .shadow(color: Color.black.opacity(0.05), radius: 5)
         }
-        .padding(.horizontal)
-        .padding(.top, 10)
     }
 }
 
