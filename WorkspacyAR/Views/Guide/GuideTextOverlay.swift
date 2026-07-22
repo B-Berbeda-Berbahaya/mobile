@@ -13,12 +13,11 @@ struct GuideTextOverlay: View {
     
     var body: some View {
         Text(caption)
-//            .font(.caption)
+            .font(.caption)
             .foregroundColor(.primary.opacity(0.9))
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(.regularMaterial)
-//            .background(Color.black.opacity(0.6))
             .cornerRadius(10)
             .padding(.bottom, 16)
     }

@@ -1,10 +1,12 @@
 {
   "pathsToIds" : {
     "\/Workspacy\/Sources\/Workspacy\/Workspacy.rkassets\/Scene.usda" : "2075884B-D127-4458-87B2-475B7B399065",
+    "Workspacy\/Sources\/Workspacy\/Workspacy.rkassets\/Scene.usda" : "1856B8D2-0368-4BEA-9C8C-FB5BD3368E6A",
     "Workspacy\/Sources\/Workspacy\/Workspacy.rkassets\/World.usda" : "AF3680C1-CA75-492D-AB59-525E97BC01D6"
   },
   "projectID" : -975304297719416436,
   "uuidToIntID" : {
+    "1856B8D2-0368-4BEA-9C8C-FB5BD3368E6A" : -3633830876099461771,
     "2075884B-D127-4458-87B2-475B7B399065" : -145380698924828276,
     "AF3680C1-CA75-492D-AB59-525E97BC01D6" : -2729572910293800520
   }
