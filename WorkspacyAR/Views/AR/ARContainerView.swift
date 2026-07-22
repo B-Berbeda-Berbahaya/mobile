@@ -1,133 +1,86 @@
-import SwiftUI
-import RealityKit
 import ARKit
+import RealityKit
+import SwiftUI
 
 public struct ARViewRepresentable: UIViewRepresentable {
     @ObservedObject var sessionManager: ARSessionManager
     public let coordinator: ARViewCoordinator
-    
-    public init(sessionManager: ARSessionManager, coordinator: ARViewCoordinator) {
+
+    public init(
+        sessionManager: ARSessionManager,
+        coordinator: ARViewCoordinator
+    ) {
         self.sessionManager = sessionManager
         self.coordinator = coordinator
     }
-    
+
     public func makeCoordinator() -> ARViewCoordinator {
         return coordinator
     }
-    
+
     public func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
-        
+
         sessionManager.startSession()
         arView.session = sessionManager.session
-        
+
         context.coordinator.setupGesture(in: arView)
-        
+
         return arView
     }
-    
+
     public func updateUIView(_ uiView: ARView, context: Context) {
         context.coordinator.activePlacingType = coordinator.activePlacingType
-        
-        if context.coordinator.stateManager.shouldAddPointTrigger {
-            context.coordinator.stateManager.shouldAddPointTrigger = false
+
+        if context.coordinator.stateManager.isAddingPoint {
+            context.coordinator.stateManager.setIsAddingPoint(false)
             context.coordinator.addPointAtFocus()
         }
-        if context.coordinator.stateManager.shouldUndoPointTrigger {
-            context.coordinator.stateManager.shouldUndoPointTrigger = false
+        if context.coordinator.stateManager.canUndo {
+            context.coordinator.stateManager.setCanUndo(false)
             context.coordinator.removeLastPoint()
         }
-        if context.coordinator.stateManager.shouldResetTrigger {
-            context.coordinator.stateManager.shouldResetTrigger = false
+        if context.coordinator.stateManager.canReset {
+            context.coordinator.stateManager.setCanReset(false)
             context.coordinator.resetCalibration()
         }
-        
-        context.coordinator.updateHandlesVisibility(isLocked: context.coordinator.stateManager.isDeskLocked)
+
+        context.coordinator.updateHandlesVisibility(
+            isLocked: context.coordinator.stateManager.isDeskLocked
+        )
     }
 }
 
 public struct ARContainerView: View {
     @ObservedObject var sessionManager: ARSessionManager
     public let coordinator: ARViewCoordinator
-    @ObservedObject var stateManager: StateManager
+    @State var stateManager: StateManager
     
-    public init(sessionManager: ARSessionManager, coordinator: ARViewCoordinator, stateManager: StateManager) {
-        self.sessionManager = sessionManager
-        self.coordinator = coordinator
-        self.stateManager = stateManager
-    }
-    
+    var isOnboardingFinished: Bool = false
+
+//    public init(
+//        sessionManager: ARSessionManager,
+//        coordinator: ARViewCoordinator,
+//        stateManager: StateManager
+//    ) {
+//        self.sessionManager = sessionManager
+//        self.coordinator = coordinator
+//        self.stateManager = stateManager
+//    }
+
     public var body: some View {
         ZStack {
-            ARViewRepresentable(sessionManager: sessionManager, coordinator: coordinator)
-                .edgesIgnoringSafeArea(.all)
-            
-            // 1. CENTER CROSSHAIR (Hanya muncul saat kalibrasi / meja belum dikunci)
-            if !stateManager.isDeskLocked {
-                VStack {
-                    ZStack {
-                        if !stateManager.isFocusOnTable {
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                                .frame(width: 32, height: 32)
-                                .shadow(color: .black.opacity(0.5), radius: 1)
-                        }
-                        
-                        Circle()
-                            .fill(stateManager.isFocusOnTable ? Color.green : Color.white)
-                            .frame(width: 4, height: 4)
-                            .shadow(color: .black.opacity(0.50), radius: 1)
-                        
-                        VStack {
-                            Spacer()
-                                .frame(height: 50)
-                            if !stateManager.detectedPlaneType.isEmpty && stateManager.detectedPlaneType != "Scanning area..." {
-                                Text(stateManager.detectedPlaneType)
-                                    .font(.caption2)
-                                    .bold()
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .background(stateManager.isFocusOnTable ? Color.green.opacity(0.85) : Color.black.opacity(0.6))
-                                    .cornerRadius(6)
-                                    .shadow(radius: 2)
-                            }
-                        }
-                    }
-                }
-                .allowsHitTesting(false)
-            }
-            
-            // 2. TOP INSTRUCTION GUIDE
-            if !stateManager.isDeskLocked {
-                VStack {
-                    if stateManager.calibrationPoints.isEmpty {
-                        Text("Gerakkan perangkat dan tambah titik\nuntuk membuat area meja.")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(20)
-                            .shadow(radius: 8)
-                            .padding(.top, 60)
-                    } else if stateManager.calibrationPoints.count < 3 {
-                        Text("Tambah setidaknya 3 titik\nuntuk membuat area meja.")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(20)
-                            .shadow(radius: 8)
-                            .padding(.top, 60)
-                    }
-                    Spacer()
-                }
+            // BASE AR VIEW
+            // Fullscreen
+            ARViewRepresentable(
+                sessionManager: sessionManager,
+                coordinator: coordinator
+            )
+            .edgesIgnoringSafeArea(.all)
+
+            // CONDITIONAL OVERLAYS
+            if stateManager.isDeskLocked {
+                lockedOverlay
             } else {
                 VStack {
                     HStack {
@@ -142,77 +95,142 @@ public struct ARContainerView: View {
                         }
                         .applyGlassEffect(in: Circle())
                         .shadow(radius: 4)
-                        .padding(.top, 60)
-                        .padding(.trailing, 20)
+                }
+                .padding(.top, 60)
+                .padding(.trailing, 20)
+            }
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var unlockedCalibrationOverlay: some View {
+        // Mode Kalibrasi: Crosshair, Petunjuk Teks, dan Control Buttons
+        ZStack {
+            // Crosshair + Label
+            centerCrosshairView
+                .allowsHitTesting(false)
+
+            // Instruction Guide di atas
+            instructionGuideView
+
+            // Trailing Control Buttons (Trash, Plus, Undo)
+            trailingControlsView
+
+            // Tombol Selesai di bawah
+            finishButtonView
+        }
+    }
+
+    private var centerCrosshairView: some View {
+        VStack {
+            ZStack {
+                PlaneDetectorCrossHair(
+                    strokeColor: .white,
+                    centerColor: stateManager.isFocusOnTable ? .green : .white
+                )
+
+                VStack {
+                    Spacer().frame(height: 50)
+
+                    if !stateManager.detectedPlaneType.isEmpty
+                        && stateManager.detectedPlaneType != "Scanning area..."
+                    {
+                        Text(stateManager.detectedPlaneType)
+                            .font(.caption2)
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                stateManager.isFocusOnTable
+                                    ? Color.green.opacity(0.85)
+                                    : Color.black.opacity(0.6)
+                            )
+                            .cornerRadius(6)
+                            .shadow(radius: 2)
                     }
-                    Spacer()
                 }
             }
-            
-            // 3. TRAILING CONTROLS (Kalibrasi)
-            if !stateManager.isDeskLocked {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 24) {
-                        Button(action: {
-                            stateManager.shouldResetTrigger = true
-                        }) {
-                            Image(systemName: "trash")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .secondary : .red)
-                                .frame(width: 50, height: 50)
-                        }
-                        .applyGlassEffect(in: Circle())
-                        .disabled(stateManager.calibrationPoints.isEmpty)
-                        
-                        Button(action: {
-                            stateManager.shouldAddPointTrigger = true
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundColor(stateManager.focus3DPosition != nil ? .primary : .secondary)
-                                .frame(width: 60, height: 60)
-                        }
-                        .applyGlassEffect(in: Circle())
-                        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
-                        .disabled(stateManager.focus3DPosition == nil)
-                        
-                        Button(action: {
-                            stateManager.shouldUndoPointTrigger = true
-                        }) {
-                            Image(systemName: "arrow.uturn.backward")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(stateManager.calibrationPoints.isEmpty ? .secondary : .primary)
-                                .frame(width: 50, height: 50)
-                        }
-                        .applyGlassEffect(in: Circle())
-                        .disabled(stateManager.calibrationPoints.isEmpty)
-                    }
-                    .padding(.trailing, 24)
+        }
+    }
+
+    private var instructionGuideView: some View {
+        VStack {
+            if stateManager.calibrationPoints.isEmpty {
+                GuideTextOverlay(
+                    caption:
+                        "Gerakkan perangkat dan tambah titik untuk membuat area meja."
+                )
+                .padding(.top, 60)
+            } else if stateManager.calibrationPoints.count < 3 {
+                GuideTextOverlay(
+                    caption:
+                        "Tambah setidaknya 3 titik untuk membuat area meja."
+                )
+                .padding(.top, 60)
+            }
+            Spacer()
+        }
+    }
+
+    private var trailingControlsView: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: 24) {
+                // Trash Button
+                VirtualDeskPlaneButton(
+                    systemName: "trash",
+                    isDisabled: stateManager.calibrationPoints.isEmpty
+                ) {
+                    stateManager.setCanReset(true)
                 }
-                
-                VStack {
-                    Spacer()
-                    if stateManager.calibrationPoints.count >= 3 {
-                        Button(action: {
-                            withAnimation { stateManager.isDeskLocked = true }
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "checkmark")
-                                    .font(.headline)
-                                Text("Selesai")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 14)
-                        }
-                        .applyGlassEffect(in: Capsule())
-                        .shadow(radius: 5)
-                        .transition(.scale.combined(with: .opacity))
-                        .padding(.bottom, 120) // Supaya tidak tertutup toolbar bawah Planner
-                    }
+
+                // Plus Button
+                VirtualDeskPlaneButton(
+                    systemName: "plus",
+                    iconSize: 24,
+                    foregroundColor: .primary,
+                    backgroundColor: stateManager.focus3DPosition != nil ? .white : .clear,
+                    size: 60,
+                    isDisabled: stateManager.focus3DPosition == nil
+                ) {
+                    stateManager.setIsAddingPoint(true)
                 }
+
+                // Undo Button
+                VirtualDeskPlaneButton(
+                    systemName: "arrow.uturn.backward",
+                    isDisabled: stateManager.calibrationPoints.isEmpty
+                ) {
+                    stateManager.setCanUndo(true)
+                }
+            }
+            .padding(.trailing, 24)
+        }
+    }
+
+    private var finishButtonView: some View {
+        VStack {
+            Spacer()
+            if stateManager.calibrationPoints.count >= 3 {
+                Button(action: {
+                    withAnimation { stateManager.setDeskLock(true) }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark")
+                            .font(.headline)
+                        Text("Finish")
+                            .font(.headline)
+                    }
+                    .foregroundColor(.white)
+                    .cornerRadius(25)
+                    .transition(.scale.combined(with: .opacity))
+                }
+                .padding(8)
+                .tint(.blue)
+                .glassProminentIfAvailable(color: .blue)
+                .padding(.bottom, 120)
             }
         }
     }
