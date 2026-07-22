@@ -550,7 +550,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         return entity
     }
     
-    private func generateGridTexture() -> TextureResource? {
+    private func generateGridTexture(color: UIColor = .green) -> TextureResource? {
         let tileSize: CGFloat = 100
         let format = UIGraphicsImageRendererFormat.default()
         format.opaque = false
@@ -558,22 +558,29 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         
         let image = renderer.image { context in
             let ctx = context.cgContext
-            ctx.setFillColor(UIColor.systemGreen.withAlphaComponent(0.15).cgColor)
+            
+            // 1. Warna dasar kanvas (Background hijau transparan 15%)
+            ctx.setFillColor(color.withAlphaComponent(0.15).cgColor)
             ctx.fill(CGRect(x: 0, y: 0, width: tileSize, height: tileSize))
             
-            ctx.setStrokeColor(UIColor.systemGreen.withAlphaComponent(0.35).cgColor)
+            // 2. Gambar garis pembagi kecil (Minor Grid - Setiap 2 cm / 20 piksel)
+            ctx.setStrokeColor(color.withAlphaComponent(0.35).cgColor)
             ctx.setLineWidth(1.0)
+            
+            // Garis vertikal minor
             for x in stride(from: 20, to: Int(tileSize), by: 20) {
                 ctx.move(to: CGPoint(x: CGFloat(x), y: 0))
                 ctx.addLine(to: CGPoint(x: CGFloat(x), y: tileSize))
             }
+            // Garis horizontal minor
             for y in stride(from: 20, to: Int(tileSize), by: 20) {
                 ctx.move(to: CGPoint(x: 0, y: CGFloat(y)))
                 ctx.addLine(to: CGPoint(x: tileSize, y: CGFloat(y)))
             }
             ctx.strokePath()
             
-            ctx.setStrokeColor(UIColor.systemGreen.withAlphaComponent(0.85).cgColor)
+            // 3. Gambar garis pembatas utama (Major Grid - Tepi kotak 10 cm / 100 piksel)
+            ctx.setStrokeColor(color.withAlphaComponent(0.85).cgColor)
             ctx.setLineWidth(3.0)
             ctx.stroke(CGRect(x: 0, y: 0, width: tileSize, height: tileSize))
         }
@@ -590,14 +597,23 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
             return
         }
         
-        let indices = Triangulator.triangulate(points: points)
-        guard !indices.isEmpty else { return }
+        let frontIndices = Triangulator.triangulate(points: points)
+        guard !frontIndices.isEmpty else { return }
+        
+        // Sertakan indeks dua sisi (double-sided) agar tidak ter-cull dari sudut pandang manapun
+        var backIndices: [UInt32] = []
+        for i in stride(from: 0, to: frontIndices.count, by: 3) {
+            backIndices.append(frontIndices[i])
+            backIndices.append(frontIndices[i + 2])
+            backIndices.append(frontIndices[i + 1])
+        }
+        let doubleSidedIndices = frontIndices + backIndices
         
         var descriptor = MeshDescriptor(name: "desk_mesh")
         let alignedY = points.first?.y ?? 0.0
         let vertices = points.map { SIMD3<Float>($0.x, alignedY + 0.001, $0.z) }
         descriptor.positions = MeshBuffers.Positions(vertices)
-        descriptor.primitives = .triangles(indices)
+        descriptor.primitives = .triangles(doubleSidedIndices)
         descriptor.normals = MeshBuffers.Normals(Array(repeating: SIMD3<Float>(0, 1, 0), count: vertices.count))
         
         if !vertices.isEmpty {
@@ -633,6 +649,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
             } else {
                 let deskModel = ModelEntity(mesh: mesh, materials: [material])
                 deskModel.name = "desk_model"
+                deskModel.components.set(GroundingShadowComponent(castsShadow: false, receivesShadow: false))
                 anchor.addChild(deskModel)
             }
         }
