@@ -7,21 +7,6 @@ public enum PlaceableEntityFactory {
         -> ModelEntity
     {
         do {
-<<<<<<< HEAD
-            let entity = try await ModelLoader.load(named: type.assetName)
-            
-            if let modelEntity = entity as? ModelEntity {
-                modelEntity.generateCollisionShapes(recursive: true)
-                return modelEntity
-            }
-            
-            if let firstModelChild = entity.findFirstModelEntity() {
-                firstModelChild.scale = type.scaleCorrection
-                firstModelChild.generateCollisionShapes(recursive: true)
-                return firstModelChild
-            }
-            return makeFallbackBox(for: type)
-=======
             // Load file USDZ (Root Entity)
             let loadedEntity = try await ModelLoader.load(named: type.assetName)
             print("before" , loadedEntity.transform.scale)
@@ -44,7 +29,6 @@ public enum PlaceableEntityFactory {
             containerEntity.generateCollisionShapes(recursive: true)
 
             return containerEntity
->>>>>>> d01692b (F/30 object anchor handling (#31))
         } catch {
             return makeFallbackBox()
         }

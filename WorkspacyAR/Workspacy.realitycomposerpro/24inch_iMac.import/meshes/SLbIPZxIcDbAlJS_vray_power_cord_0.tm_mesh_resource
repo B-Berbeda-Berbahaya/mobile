@@ -1,0 +1,22 @@
+__type: "tm_mesh_resource"
+__uuid: "2a0f54dd-5358-340e-6690-4e3788c67902"
+models: [
+	{
+		__uuid: "be2e13a4-19e5-9cf6-50a9-5fa41268e74a"
+		name: "SLbIPZxIcDbAlJS_vray_power_cord_0"
+		geometry: "39feab55-5128-be68-cde1-99ceb71e9345"
+		bounds_min: {
+			__uuid: "10a9bcd8-a4fd-48e2-527f-6a09ec5be499"
+			x: -75.298500061035156
+			y: -1142.0101318359375
+			z: 311.40457153320313
+		}
+		bounds_max: {
+			__uuid: "f4181297-1ebe-a333-67e8-4c0b2c000fe3"
+			x: -14.818499565124512
+			y: 1.4449331760406494
+			z: 1229.4599609375
+		}
+	}
+]
+__asset_uuid: "cf3a2ae3-4267-b46d-7606-e2acf169f533"

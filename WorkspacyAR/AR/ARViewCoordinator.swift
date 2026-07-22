@@ -8,19 +8,12 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
     public var stateManager: StateManager
 
     public var onSelectedObjectChanged: ((PlacedObject?) -> Void)?
-
-    public var activePlacingType: PlaceableObjectType?
-
     public var onPlacedObjectUpdated: ((PlacedObject) -> Void)?
     public var onPopoverPositionChanged: ((CGPoint) -> Void)?
-<<<<<<< HEAD
-    
-=======
 
     public var activePlacingType: PlaceableObjectType = .macbook16
 
     /// Shared ARView class  instance
->>>>>>> d01692b (F/30 object anchor handling (#31))
     public weak var arView: ARView?
 
     public var selectedPlacedObject: PlacedObject?
@@ -65,39 +58,9 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         stateManager.onUndoPointTrigger = { [weak self] in
             self?.removeLastPoint()
         }
-<<<<<<< HEAD
-        
-        // If we reach here, we are trying to place something
-        guard stateManager.isDeskLocked else { return } // Can only place if desk is locked
-        guard let type = activePlacingType else { return } // Tidak ada tipe aktif, tidak bisa place
-
-        let hitResults = arView.hitTest(location)
-        if let deskHit = hitResults.first(where: { $0.entity.name == "desk_model" }) {
-            Task { @MainActor in
-                await placeObject(worldPosition: deskHit.position, type: type)
-            }
-        } else {
-            // Failed to drop: Spawn invalid ghost
-            let raycastResults = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .horizontal)
-            let position: SIMD3<Float>
-            if let firstResult = raycastResults.first {
-                position = SIMD3<Float>(
-                    firstResult.worldTransform.columns.3.x,
-                    firstResult.worldTransform.columns.3.y,
-                    firstResult.worldTransform.columns.3.z
-                )
-            } else {
-                position = SIMD3<Float>(0, 0, -0.5) // Fallback
-            }
-            
-            Task { @MainActor in
-                await spawnInvalidGhost(type: type, at: position, in: arView)
-            }
-=======
 
         stateManager.onResetTrigger = { [weak self] in
             self?.resetCalibration()
->>>>>>> d01692b (F/30 object anchor handling (#31))
         }
 
         stateManager.onDescLocked = { [weak self] isLocked in

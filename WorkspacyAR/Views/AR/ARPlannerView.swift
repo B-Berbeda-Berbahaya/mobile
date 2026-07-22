@@ -23,13 +23,8 @@ struct ARPlannerView: View {
 
     @State private var placedObjects: [PlacedObjectSim] = []
     @State private var selectedObject: PlacedObjectSim? = nil
-<<<<<<< HEAD
-    @State private var selectedObjectType: PlaceableObjectType?
-    @State private var selectedCategory: ItemCategory?
-=======
     @State private var selectedObjectType: PlaceableObjectType = .macbookAir13new
     @State private var selectedCategory: ItemCategory = .laptop
->>>>>>> d01692b (F/30 object anchor handling (#31))
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
@@ -63,60 +58,12 @@ struct ARPlannerView: View {
                         )
                         .ignoresSafeArea()
 
-<<<<<<< HEAD
-            // Overlays & UI Controllers
-            VStack {
-                if onboardingStep != .scanningGuide {
-                    // Top Toolbar
-                    PlannerToolbar(
-                        sessionState: stateManager.isDeskLocked
-                            ? "Meja Terkunci - Tap untuk menaruh objek"
-                            : "Buat Area Meja",
-                        showSidebar: $showSidebar,
-                        onClear: {
-                            showClearConfirmation = true
-                        },
-                        onFinish: {
-                            showSuccessScreen = true
-                        }
-                    )
-                }
-
-                Spacer()
-
-                // Bottom control panel
-                if stateManager.isDeskLocked {
-                    if selectedObject == nil {
-                        VStack(spacing: 8) {
-<<<<<<< HEAD
-                            Text("Pilih letak untuk \(selectedObjectType?.displayName ?? "item")")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.9))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.black.opacity(0.6))
-                                .cornerRadius(10)
-                                .padding(.bottom, 16)
-=======
-                            Text(
-                                "Pilih letak untuk \(selectedObjectType.displayName)"
-                            )
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.6))
-                            .cornerRadius(10)
-                            .padding(.bottom, 16)
->>>>>>> d01692b (F/30 object anchor handling (#31))
-=======
                         if stateManager.popoverPosition != .zero {
                             ARFloatingPopover(
                                 coordinator: coordinator,
                                 stateManager: stateManager
                             )
                             .position(stateManager.popoverPosition)
->>>>>>> 7f14d3b (F/8 UI screen development   main screen (#35))
                         }
                     } else {
                         Color.black.ignoresSafeArea()
@@ -131,26 +78,6 @@ struct ARPlannerView: View {
                     sessionManager.pauseSession()
                 }
 
-<<<<<<< HEAD
-            // Sliding Sidebar Drawer
-            if showSidebar {
-                CatalogSidebarView(
-                    selectedObjectType: Binding(
-                        get: { selectedObjectType ?? .macbook16},
-                        set: { selectedObjectType = $0 }
-                    ),
-                    selectedCategory: Binding(
-                        get: { selectedCategory ?? .laptop },
-                        set: { selectedCategory = $0 }
-                    ),
-                    onPlaceItem: { item in
-                        selectedObjectType = item.objectType
-                        selectedCategory = selectedObjectType?.category
-                        withAnimation { showSidebar = false }
-                    },
-                    onClose: {
-                        withAnimation { showSidebar = false }
-=======
                 // Top Center Instruction Badge
                 VStack {
                     if stateManager.isDeskLocked && selectedObject == nil {
@@ -168,7 +95,6 @@ struct ARPlannerView: View {
                         }
                         .padding(.top, 70) // Below top toolbar
                         .transition(.move(edge: .top).combined(with: .opacity))
->>>>>>> 7f14d3b (F/8 UI screen development   main screen (#35))
                     }
                     Spacer()
                 }
@@ -455,60 +381,9 @@ struct ARPlannerView: View {
                         }
                         .applyGlassEffect(in: Circle())
                     }
-<<<<<<< HEAD
-                    .padding(24)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(20)
-                    .shadow(radius: 10)
-                    .padding(.horizontal, 30)
-                    .frame(maxWidth: 340)
-                }
-                .ignoresSafeArea()
-                .zIndex(100)
-                .transition(.opacity.combined(with: .scale))
-            }
-        }
-        .onAppear {
-            onboardingStep = .scanningGuide
-            initializeCoordinator()
-        }
-        .fullScreenCover(isPresented: $showSuccessScreen) {
-            LayoutSuccessView(
-                placedObjects: placedObjects,
-                onSaveAndExit: {
-                    showSuccessScreen = false
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("SwitchToDashboard"),
-                        object: nil
-                    )
-                }
-            )
-        }
-<<<<<<< HEAD
-        .onChange(of: selectedObjectType) { _, newValue in
-            coordinator?.activePlacingType = newValue
-=======
-        .onChange(of: selectedObject) { _, newObj in
-            if let newObj = newObj {
-                if coordinator?.selectedPlacedObject?.id != newObj.id {
-                    if let obj = coordinator?.anchorManager.placedObjects.first(
-                        where: { $0.id == newObj.id })
-                    {
-                        coordinator?.selectObject(obj)
-                    }
-                }
-            } else {
-                if coordinator?.selectedPlacedObject != nil {
-                    coordinator?.deselectCurrentObject()
-=======
->>>>>>> 7f14d3b (F/8 UI screen development   main screen (#35))
                 }
             }
-<<<<<<< HEAD
->>>>>>> d01692b (F/30 object anchor handling (#31))
-=======
             .toolbarBackground(.hidden, for: .navigationBar)
->>>>>>> bcbcf33 (F/8 UI screen development   main screen (#32))
         }
     }
     
@@ -625,8 +500,6 @@ struct ARPlannerView: View {
         coordinator?.removeObject(withID: obj.id)
         selectedObject = nil
     }
-<<<<<<< HEAD
-=======
 
     private func mapDeskItemToObjectType(_ item: DeskItem)
         -> PlaceableObjectType
@@ -645,7 +518,6 @@ struct ARPlannerView: View {
         }
         return .macbook16
     }
->>>>>>> d01692b (F/30 object anchor handling (#31))
 }
 
 extension View {
