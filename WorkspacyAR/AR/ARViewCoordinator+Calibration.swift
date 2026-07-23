@@ -117,11 +117,9 @@ extension ARViewCoordinator {
             self.setReticleEntity(nil)
         }
 
-        DispatchQueue.main.async {
-            self.stateManager.calibrationPoints.removeAll()
-            self.stateManager.isDeskDetected = false
-            self.stateManager.setDeskLock(false)
-        }
+        self.stateManager.calibrationPoints.removeAll()
+        self.stateManager.isDeskDetected = false
+        self.stateManager.setDeskLock(false)
     }
 
     public func updateHandlesVisibility(isLocked: Bool) {

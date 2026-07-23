@@ -12,7 +12,7 @@ import RealityKit
 
 extension ARViewCoordinator {
     /// Tracks the drag/translation gesture state of the selected object, validates if it remains
-    /// on top of the desk mesh, and animates a bounce-back to the last valid position if dropped outside.
+    /// on top of the desk mesh or inside the custom desk polygon, and animates a bounce-back to the initial position before move if dropped outside.
     func trackDraggedObjectAndBounce() {
         guard let arView = arView,
             let selected = selectedPlacedObject,
@@ -36,61 +36,60 @@ extension ARViewCoordinator {
             }
         }
 
-        let origin = SIMD3<Float>(
-            entity.position(relativeTo: nil).x,
-            entity.position(relativeTo: nil).y + 0.05,
-            entity.position(relativeTo: nil).z
-        )
-        let destination = SIMD3<Float>(
-            entity.position(relativeTo: nil).x,
-            entity.position(relativeTo: nil).y - 0.05,
-            entity.position(relativeTo: nil).z
-        )
-        let hits = arView.scene.raycast(from: origin, to: destination)
-        let isOnDesk = hits.contains { $0.entity.name == "desk_model" }
+        // Get WORLD position of the object in 3D space
+        let worldPos = entity.position(relativeTo: nil)
 
-        if isOnDesk {
-            self.lastValidPosition = entity.position(relativeTo: entity.parent)
+        // Check if 2D (X, Z) world position is inside polygon of calibrated desk corners
+        let points2D = stateManager.calibrationPoints.map { SIMD2<Float>($0.x, $0.z) }
+        let point2D = SIMD2<Float>(worldPos.x, worldPos.z)
+
+        var isOnDesk = false
+        if points2D.count >= 3 {
+            isOnDesk = isPointInPolygon(point: point2D, polygon: points2D)
+        } else {
+            let origin = worldPos + SIMD3<Float>(0, 0.10, 0)
+            let destination = worldPos - SIMD3<Float>(0, 0.10, 0)
+            let hits = arView.scene.raycast(from: origin, to: destination)
+            isOnDesk = hits.contains { $0.entity.name == "desk_model" } || stateManager.calibrationPoints.isEmpty
         }
-
-        let whiteMaterial = UnlitMaterial(
-            color: UIColor.white.withAlphaComponent(0.35)
-        )
-        updateHighlightMaterial(on: entity, to: whiteMaterial)
 
         if isDragging {
             self.wasDragging = true
         } else if self.wasDragging {
             self.wasDragging = false
 
-            if !isOnDesk {
-                if let lastValid = self.lastValidPosition {
-                    var targetTransform = entity.transform
-                    targetTransform.translation = lastValid
+            // Hentikan sisa inersia/kecepatan fisik agar objek tidak meluncur/bergeser sendiri setelah dilepas
+            entity.components.set(PhysicsMotionComponent(linearVelocity: .zero, angularVelocity: .zero))
 
-                    entity.move(
-                        to: targetTransform,
-                        relativeTo: entity.parent,
-                        duration: 0.35,
-                        timingFunction: .easeOut
-                    )
+            if !isOnDesk {
+                if let startingPos = self.initialPositionBeforeMove {
+                    entity.position = startingPos
+                    entity.components.set(PhysicsMotionComponent(linearVelocity: .zero, angularVelocity: .zero))
                     notifyObjectUpdate(selected)
+                    print("🔄 Objek dilepas di luar meja! Mengembalikan langsung ke posisi awal sebelum dimove.")
                 }
+            } else {
+                // Jika dilepas di posisi valid di dalam meja, perbarui posisi awal ke posisi baru ini
+                self.initialPositionBeforeMove = entity.position
+                self.lastValidPosition = entity.position
+                notifyObjectUpdate(selected)
             }
         }
     }
 
-    private func updateHighlightMaterial(
-        on entity: Entity,
-        to material: RealityKit.Material
-    ) {
-        if entity.name == "highlight_overlay",
-            let modelEntity = entity as? ModelEntity
-        {
-            modelEntity.model?.materials = [material]
+    func isPointInPolygon(point: SIMD2<Float>, polygon: [SIMD2<Float>]) -> Bool {
+        guard polygon.count >= 3 else { return false }
+        var inside = false
+        var j = polygon.count - 1
+        for i in 0..<polygon.count {
+            let pi = polygon[i]
+            let pj = polygon[j]
+            if ((pi.y > point.y) != (pj.y > point.y)) &&
+                (point.x < (pj.x - pi.x) * (point.y - pi.y) / (pj.y - pi.y) + pi.x) {
+                inside.toggle()
+            }
+            j = i
         }
-        for child in entity.children {
-            updateHighlightMaterial(on: child, to: material)
-        }
+        return inside
     }
 }

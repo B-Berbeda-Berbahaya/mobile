@@ -25,25 +25,25 @@ extension ARViewCoordinator {
             {
                 // Ignore virtual desk
             } else {
-                let targetEntity =
-                entity.name == "highlight_overlay"
-                ? (entity.parent as? ModelEntity ?? entity) : entity
-                
-                if let placedObject = anchorManager.placedObjects.first(where: {
-                    $0.entity == targetEntity
-                }) {
-                    selectObject(placedObject)
-                    return
+                var currentNode: Entity? = entity.name == "highlight_overlay"
+                    ? (entity.parent ?? entity) : entity
+                while let node = currentNode {
+                    if let placedObject = anchorManager.placedObjects.first(where: { $0.entity == node }) {
+                        selectObject(placedObject)
+                        return
+                    }
+                    currentNode = node.parent
                 }
             }
         }
         
-        guard stateManager.isDeskLocked else { return }
-        
-        // Unwrap di sini — kalau nggak ada tipe aktif, memang belum bisa place apapun
+        // Unwrap di sini — kalau nggak ada tipe aktif, deselect objek yang terpilih
         guard let type = activePlacingType else {
+            deselectCurrentObject()
             return
         }
+        
+        guard stateManager.isDeskLocked else { return }
         
         let hitResults = arView.hitTest(location)
         
@@ -58,19 +58,31 @@ extension ARViewCoordinator {
                 alignment: .horizontal
             )
             
-            let position: SIMD3<Float>
             if let firstResult = raycastResults.first {
-                position = SIMD3<Float>(
+                let position = SIMD3<Float>(
                     firstResult.worldTransform.columns.3.x,
                     firstResult.worldTransform.columns.3.y,
                     firstResult.worldTransform.columns.3.z
                 )
+                
+                let points2D = stateManager.calibrationPoints.map { SIMD2<Float>($0.x, $0.z) }
+                let point2D = SIMD2<Float>(position.x, position.z)
+                let isInsideDesk = points2D.count >= 3 ? isPointInPolygon(point: point2D, polygon: points2D) : true
+                
+                if isInsideDesk {
+                    Task { @MainActor in
+                        await placeObject(worldPosition: position, type: type)
+                    }
+                } else {
+                    Task { @MainActor in
+                        await spawnInvalidGhost(type: type, at: position, in: arView)
+                    }
+                }
             } else {
-                position = SIMD3<Float>(0, 0, -0.5)
-            }
-            
-            Task { @MainActor in
-                await spawnInvalidGhost(type: type, at: position, in: arView)
+                let fallbackPos = SIMD3<Float>(0, 0, -0.5)
+                Task { @MainActor in
+                    await spawnInvalidGhost(type: type, at: fallbackPos, in: arView)
+                }
             }
         }
     }
@@ -102,7 +114,7 @@ extension ARViewCoordinator {
 //        selectObject(placedObj)
 //    }
     
-    private func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType) async {
+    func placeObject(worldPosition: SIMD3<Float>, type: PlaceableObjectType) async {
         guard let arView = arView else { return }
         
         let entity = await PlaceableEntityFactory.makeEntity(for: type)
@@ -154,7 +166,7 @@ extension ARViewCoordinator {
         }
     }
     
-    private func applyMaterialRecursively(
+    func applyMaterialRecursively(
         _ entity: Entity,
         material: RealityKit.Material
     ) {
