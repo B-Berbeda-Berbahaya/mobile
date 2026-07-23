@@ -29,8 +29,13 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         self.deskAnchor = anchor
     }
     
+    var initialPositionBeforeMove: SIMD3<Float>? = nil
     var lastValidPosition: SIMD3<Float>? = nil
     var wasDragging = false
+
+    // Bundle Layout Preview
+    var previewAnchor: AnchorEntity? = nil
+    var previewLayoutID: UUID? = nil
 
     // Reticle
     private(set) var reticleAnchor: AnchorEntity? = nil
@@ -146,6 +151,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         trackDraggedObjectAndBounce()
         updateReticle()
         trackErgonomics()
+        updatePreviewBundleLive()
     }
 
     func notifyObjectUpdate(_ placedObj: PlacedObject) {

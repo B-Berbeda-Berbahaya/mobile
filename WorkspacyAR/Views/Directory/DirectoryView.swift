@@ -72,9 +72,11 @@ struct DirectoryItemCell: View {
                     )
                     .frame(height: 64)
 
-                Image(systemName: item.systemImage)
-                    .font(.title2)
-                    .foregroundStyle(iconTint)
+                Image(item.objectType.thumbnailImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
             Text(item.name)

@@ -60,6 +60,16 @@ public final class StateManager {
         canReset = value
     }
 
+    // MARK: - Saved Layout Triggers & State
+    public var shouldSaveLayoutTrigger: Bool = false
+    public var layoutToRestore: SavedDeskLayout? = nil
+    public var pendingRestoringLayout: SavedDeskLayout? = nil
+    public var pendingBundleRotation: Float = 0.0
+    public var shouldConfirmBundlePlacementTrigger: Bool = false
+    public var shouldCancelBundlePlacementTrigger: Bool = false
+    public var showSavedLayoutsSheet: Bool = false
+    public var saveStatusMessage: String? = nil
+
     // Ergonomics Metrics
     public var realTimeDistance: Float = 0.0
     public var realTimeEyeLevelDiff: Float = 0.0

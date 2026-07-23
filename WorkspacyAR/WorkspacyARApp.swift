@@ -3,6 +3,7 @@
 //  WorkspacyAR
 
 import SwiftUI
+import SwiftData
 
 @main
 struct WorkspacyARApp: App {
@@ -10,5 +11,6 @@ struct WorkspacyARApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: SavedDeskLayout.self)
     }
 }

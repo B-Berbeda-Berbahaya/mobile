@@ -14,6 +14,7 @@ struct DeskItem: Identifiable, Hashable {
     let objectType: PlaceableObjectType
     
     var name: String { objectType.displayName }
+    var imageName: String { objectType.thumbnailImageName }
     var systemImage: String { objectType.sfSymbol }
     var modelFileName: String { objectType.assetName }
 }

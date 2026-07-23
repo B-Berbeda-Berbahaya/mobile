@@ -18,45 +18,40 @@ extension ARViewCoordinator {
         stateManager.setInteractionMode(.move)
         onSelectedObjectChanged?(object)
 
+        self.initialPositionBeforeMove = object.entity.position(
+            relativeTo: object.entity.parent
+        )
         self.lastValidPosition = object.entity.position(
             relativeTo: object.entity.parent
         )
         self.wasDragging = false
 
         let entity = object.entity
-        if entity.findEntity(named: "highlight_overlay") == nil {
-            if let mesh = entity.model?.mesh {
-                let glowMaterial = UnlitMaterial(
-                    color: UIColor.white.withAlphaComponent(0.35)
-                )
-                let highlightEntity = ModelEntity(
-                    mesh: mesh,
-                    materials: [glowMaterial]
-                )
-                highlightEntity.name = "highlight_overlay"
-                highlightEntity.scale = [1.05, 1.05, 1.05]
-                entity.addChild(highlightEntity)
-            }
-        }
         updatePopoverPosition()
         updateGesturesState()
     }
 
     public func deselectCurrentObject() {
         if let object = selectedPlacedObject {
-            if let highlight = object.entity.findEntity(
-                named: "highlight_overlay"
-            ) {
-                highlight.removeFromParent()
-            }
+            removeHighlightOverlay(from: object.entity)
         }
         selectedPlacedObject = nil
         stateManager.setInteractionMode(.none)
+        self.initialPositionBeforeMove = nil
         self.lastValidPosition = nil
         self.wasDragging = false
         onSelectedObjectChanged?(nil)
         stateManager.popoverPosition = .zero
         updateGesturesState()
+    }
+
+    private func removeHighlightOverlay(from entity: Entity) {
+        if let highlight = entity.findEntity(named: "highlight_overlay") {
+            highlight.removeFromParent()
+        }
+        for child in entity.children {
+            removeHighlightOverlay(from: child)
+        }
     }
 
     public func removeObject(withID id: UUID) {
