@@ -1,15 +1,16 @@
 import RealityKit
 import Foundation
 
-// Value/reference model representing a single object placed in the
-// AR scene. Responsibility: bundle together the RealityKit entity,
-// its assigned GridCoordinate, and placement metadata (id, timestamp)
-// so AnchorManager and GridSystem can track/reference it consistently.
-
-//struct PlacedObject: Identifiable {
-//
-//    // TODO: let id: UUID
-//    // TODO: let entity: ModelEntity
-//    // TODO: let gridCoordinate: GridCoordinate
-//    // TODO: let placedAt: Date
-//}
+public final class PlacedObject: Identifiable {
+    public let id: UUID
+    public let entity: ModelEntity
+    public let type: PlaceableObjectType
+    public let placedAt: Date
+    
+    public init(id: UUID = UUID(), entity: ModelEntity, type: PlaceableObjectType, placedAt: Date = Date()) {
+        self.id = id
+        self.entity = entity
+        self.type = type
+        self.placedAt = placedAt
+    }
+}

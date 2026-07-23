@@ -1,0 +1,31 @@
+__type: "tm_texture"
+__uuid: "eba9c197-1bac-f2ae-03f4-4a1c4f0cac9c"
+source_filename: "/Users/thor/Documents/code/asset for arkit+realitykit/workspacy-assets/24inch_iMac.usdz[textures/vray_power-cord_normal.jpg]"
+source_texture: "f197934d-9bab-ebbb-555f-c09f92a0b2f7"
+transform: "f964a6200d2621e6"
+transform_settings: {
+	__uuid: "b111c591-6cc7-6419-8dd9-c8d387ab8eb0"
+	__prototype_type: "tm_creation_graph"
+	__prototype_uuid: "6de37682-e96f-d4e9-4bdf-a9f8c9653985"
+	graph: {
+		__uuid: "dfd99aeb-421a-8aef-0d16-bca197931f31"
+		__prototype_type: "tm_graph"
+		__prototype_uuid: "a2059374-2cf7-1cbe-3796-cc8ee2675a9d"
+		interface: {
+			__uuid: "71be28b5-f38e-a696-699b-a15f4585634d"
+			__prototype_type: "tm_graph_interface"
+			__prototype_uuid: "92007456-5a32-a930-d8a5-fa6960fb19dc"
+		}
+	}
+}
+color_space: {
+	__uuid: "d253e9b2-97c6-a6bc-1477-392f534d8f79"
+	transfer_function: 1
+}
+__asset_uuid: "8f6f1f8f-d10d-910b-1e64-b4abb6b48e36"
+__asset_labels: [
+	"e4bec38d8f73f423"
+]
+__asset_thumbnail: {
+	__uuid: "5117bd94-c7f1-c3ea-3841-da9314bffa1b"
+}

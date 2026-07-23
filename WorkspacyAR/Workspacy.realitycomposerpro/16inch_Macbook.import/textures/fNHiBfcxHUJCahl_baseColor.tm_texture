@@ -1,0 +1,33 @@
+__type: "tm_texture"
+__uuid: "1921e992-015a-bc9d-cc05-7c32f47e288d"
+source_filename: "/Users/thor/Documents/code/asset for arkit+realitykit/workspacy-assets/16inch_Macbook.usdz[textures/fNHiBfcxHUJCahl_baseColor.png]"
+source_texture: "265ad359-25fc-47b9-14b8-acf7c5a2a47f"
+transform: "6b5fd8e4eec2cf5b"
+transform_settings: {
+	__uuid: "c0a5d58f-2ddd-a8d6-08b2-aff70dc8e0b4"
+	__prototype_type: "tm_creation_graph"
+	__prototype_uuid: "565f9a46-b719-d76a-7eaa-36e7faaddc5f"
+	graph: {
+		__uuid: "ddaf381b-c9dc-ec84-ca11-1bdf2d5ccd93"
+		__prototype_type: "tm_graph"
+		__prototype_uuid: "31ddc72a-62d2-0d6e-83b1-392db7f56278"
+		interface: {
+			__uuid: "582097ce-d576-fdb4-69c9-791bf05a2915"
+			__prototype_type: "tm_graph_interface"
+			__prototype_uuid: "fafb8c6f-264f-0609-fc29-68fbe0d040c1"
+		}
+	}
+}
+color_space: {
+	__uuid: "f4bd0e80-07a2-34d6-e667-99d719d5ff72"
+	color_primary: 1
+	transfer_function: 2
+	color_model: 1
+}
+__asset_uuid: "aee0dcb4-77c6-34ce-0462-3c3e18043813"
+__asset_labels: [
+	"e4bec38d8f73f423"
+]
+__asset_thumbnail: {
+	__uuid: "9d5de406-1f39-1b06-0156-3ec7e575c287"
+}
