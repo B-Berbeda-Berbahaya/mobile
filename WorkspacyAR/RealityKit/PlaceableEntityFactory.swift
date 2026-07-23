@@ -3,35 +3,28 @@ import SwiftUI
 import Workspacy
 
 public enum PlaceableEntityFactory {
+    
     public static func makeEntity(for type: PlaceableObjectType) async -> ModelEntity {
-            do {
-                // Load file USDZ (Root Entity)
-                let loadedEntity = try await ModelLoader.load(named: type.assetName)
+        do {
+            let loadedEntity = try await ModelLoader.load(named: type.assetName)
 
-                // Buat Container Wrapper baru
-                let containerEntity = ModelEntity()
-                containerEntity.name = "placed_\(type.rawValue)"
-                containerEntity.addChild(loadedEntity)
+            let containerEntity = ModelEntity()
+            containerEntity.name = "placed_\(type.rawValue)"
+            containerEntity.addChild(loadedEntity)
 
-                // Terapkan Skala & Rotasi pada Container (bukan pada child-nya langsung)
-                var transform = containerEntity.transform
-                transform.scale *= type.scaleCorrection
-                transform.rotation = simd_quatf(
-                    angle: -.pi / 2,
-                    axis: SIMD3<Float>(1, 0, 0)
-                )
-                containerEntity.transform = transform
+            var transform = containerEntity.transform
+            transform.scale *= type.scaleCorrection
+            // Rotasi dihapus — asset dari Blender (setelah Apply All Transforms)
+            // seharusnya sudah Y-up dengan benar, tidak perlu koreksi rotasi global lagi.
+            containerEntity.transform = transform
 
-                // Generate Collision Shapes SETELAH scale & rotation final diterapkan,
-                // supaya shape-nya sinkron dengan ukuran & orientasi visual akhir
-                containerEntity.generateCollisionShapes(recursive: true)
-
-                return containerEntity
-            } catch {
-                return makeFallbackBox()
-            }
+            containerEntity.generateCollisionShapes(recursive: true)
+            return containerEntity
+        } catch {
+            return makeFallbackBox()
         }
-
+    }
+    
     private static func makeFallbackBox() -> ModelEntity {
         // Dummy box
         let size: SIMD3<Float> = SIMD3<Float>(0.3, 0.2, 0.2)

@@ -106,6 +106,22 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         }
     }
     
+    public var thumbnailImageName: String {
+        switch self {
+        case .macbookAir13: return "mac13"
+        case .macbookPro14: return "mac14"
+        case .macbookAir15: return "mac15"
+        case .macbookPro16: return "mac16"
+        case .iMac24: return "iMac"
+        case .studioDisplay27: return "monitor27"
+        case .monitor32: return "monitor32"
+        case .appleMouse: return "mouse"
+        case .deskmat: return "deskmat"
+        case .magicKeyboard: return "keyboard"
+        case .monitorRaiser: return "monitorRaiser"
+        }
+    }
+    
     public var ergonomicTip: String {
         switch self {
         case .macbookAir13, .macbookAir15:
@@ -137,8 +153,8 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         case .macbookPro16: return "16inch_MacbookPro"
         case .iMac24: return "24inch_iMac"
         case .studioDisplay27: return "27inch_StudioDisplay"
-        case .monitor32: return "32inch_Monitor"
-        case .appleMouse: return "AppleMouse"
+        case .monitor32: return "32inchMonitor"
+        case .appleMouse: return "MagicMouse"
         case .deskmat: return "Deskmat"
         case .magicKeyboard: return "MagicKeyboardMac"
         case .monitorRaiser: return "MonitorRaiser"
@@ -155,6 +171,20 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
             return true
         default:
             return false
+        }
+    }
+    
+    public enum StackLayer {
+        case base
+        case device
+    }
+
+    public var stackLayer: StackLayer {
+        switch self {
+        case .deskmat, .monitorRaiser:
+            return .base
+        default:
+            return .device
         }
     }
     
