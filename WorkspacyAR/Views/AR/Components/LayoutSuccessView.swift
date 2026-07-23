@@ -22,7 +22,7 @@ struct LayoutSuccessView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 54))
-                            .foregroundColor(sageGreen)
+                            .foregroundColor(.biru)
                             .padding(.top, 30)
                         
                         Text("Workspace Configured")

@@ -25,6 +25,7 @@ struct GuideObjectView: View {
         ZStack(alignment: .top) {
             Group {
                 if isCompact {
+                    // MARK: Iphone Version
                     // Horizontal layout: image on left
                     HStack(alignment: .top) {
                         AsyncImage(url: URL(string: steps[currentIndex].imageURL)!) { image in
@@ -42,7 +43,9 @@ struct GuideObjectView: View {
                                 .fontWeight(.semibold)
 
                             Text(steps[currentIndex].description)
+                                .padding(.trailing, 20)
                                 .multilineTextAlignment(.leading)
+                                
 
                             Spacer()
 
@@ -56,11 +59,11 @@ struct GuideObjectView: View {
                             } label: {
                                 Text(currentIndex == steps.count - 1 ? "I'm understood" : "Continue")
                                     .fontWeight(.semibold)
-                                    .padding(.horizontal, 16)
                                     .padding(.vertical, 8)
+                                    .frame(width: 140)
                             }
                             .foregroundColor(.white)
-                            .background(themeBrown, in: Capsule())
+                            .background(.biru, in: Capsule())
                         }
                         .foregroundStyle(Color.primary)
                         .padding(.leading, 8)
@@ -70,6 +73,7 @@ struct GuideObjectView: View {
                     .transition(.move(edge: slideEdge).combined(with: .opacity))
 
                 } else {
+                    // MARK: IPAD version
                     // Original vertical layout
                     VStack(alignment: .center) {
                         VStack {
@@ -84,10 +88,12 @@ struct GuideObjectView: View {
 
                             Group {
                                 Text(steps[currentIndex].title)
-                                    .font(.largeTitle)
+                                    .font(.title)
                                     .fontWeight(.semibold)
 
                                 Text(steps[currentIndex].description)
+                                    .padding(.horizontal, 20)
+                                    .font(.body)
                                     .multilineTextAlignment(.center)
                             }
                             .foregroundStyle(Color.primary)
@@ -109,11 +115,11 @@ struct GuideObjectView: View {
                         } label: {
                             Text(currentIndex == steps.count - 1 ? "I'm understood" : "Continue")
                                 .fontWeight(.semibold)
-                                .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
+                                .frame(width: 160)
                         }
                         .foregroundColor(.white)
-                        .background(themeBrown, in: Capsule())
+                        .background(.biru, in: Capsule())
                     }
                     .padding(.bottom, 24)
                 }
@@ -152,7 +158,7 @@ struct GuideObjectView: View {
         }
 
         GuideObjectView(onDismiss: {}, steps: [
-            GuideStep(imageURL: "https://picsum.photos/seed/picsum/480/300", title: "scan", description: "scan description"),
+            GuideStep(imageURL: "https://picsum.photos/seed/picsum/480/300", title: "scan", description: "Gerakkan perangkat Anda secara perlahan untuk mendeteksi permukaan meja kerja Anda."),
             GuideStep(imageURL: "https://picsum.photos/seed/picsum/480/300", title: "place", description: "place description"),
         ])
     }

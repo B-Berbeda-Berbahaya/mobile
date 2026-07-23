@@ -41,6 +41,9 @@ struct GuideScanningView: View {
 }
 
 #Preview {
-    GuideScanningView(onDismiss: {})
-        .background(Color.gray)
+    ZStack  {
+        Color.gray
+        GuideScanningView(onDismiss: {})
+    }
+    
 }

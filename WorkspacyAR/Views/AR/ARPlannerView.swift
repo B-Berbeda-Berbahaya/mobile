@@ -530,3 +530,7 @@ extension View {
         }
     }
 }
+
+#Preview {
+    ARPlannerView()
+}
