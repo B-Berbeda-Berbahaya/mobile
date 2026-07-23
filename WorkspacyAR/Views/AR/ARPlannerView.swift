@@ -255,6 +255,16 @@ struct ARPlannerView: View {
                                         }
                                     }
                                 }
+                                
+                                if stateManager.realTimeDistance > 0 {
+                                    Divider()
+                                        .background(Color.secondary.opacity(0.15))
+                                    Text("*Posisi mata diestimasi berdasarkan posisi genggam perangkat (jarak genggam ~30cm, tinggi mata ~15cm).")
+                                        .font(.system(size: 6))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                             .padding(14)
                             .frame(width: 190)

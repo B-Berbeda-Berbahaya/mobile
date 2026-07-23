@@ -169,9 +169,19 @@ extension ARViewCoordinator {
             return
         }
         
-        // 1. Get Camera Translation in world coordinates
+        // 1. Get Camera translation and rotation matrix
         let cameraTransform = arView.cameraTransform
         let cameraPos = cameraTransform.translation
+        let matrix = cameraTransform.matrix
+        
+        // Z-axis (columns.2) points backward towards the user's face in right-handed coordinates
+        let zAxis = SIMD3<Float>(matrix.columns.2.x, matrix.columns.2.y, matrix.columns.2.z)
+        let cameraBackward = normalize(zAxis)
+        
+        // Estimate actual eye position:
+        // - Shift 30cm backward along camera Z-axis (holding distance)
+        // - Shift 15cm upward vertically (chest-to-eye height offset)
+        let estimatedEyePos = cameraPos + (cameraBackward * 0.30) + SIMD3<Float>(0, 0.15, 0)
         
         // 2. Find nearest monitor / laptop object
         let displays = anchorManager.placedObjects.filter {
@@ -193,12 +203,12 @@ extension ARViewCoordinator {
         // 3. Calculate distance and eye level diff
         let displayPos = nearestDisplay.entity.position(relativeTo: nil)
         
-        let dx = cameraPos.x - displayPos.x
-        let dz = cameraPos.z - displayPos.z
+        let dx = estimatedEyePos.x - displayPos.x
+        let dz = estimatedEyePos.z - displayPos.z
         let distance = sqrt(dx*dx + dz*dz)
         
         let displayHeight = getPhysicalHeight(for: nearestDisplay.type)
-        let eyeLevelDiff = cameraPos.y - (displayPos.y + displayHeight)
+        let eyeLevelDiff = estimatedEyePos.y - (displayPos.y + displayHeight)
         
         // 4. Determine Ergonomic Statuses
         let distStatus = evaluateDistance(distance)
@@ -238,14 +248,14 @@ extension ARViewCoordinator {
     
     private func getPhysicalHeight(for type: PlaceableObjectType) -> Float {
         switch type {
-        case .macbookAir13, .macbookAir13new:
+        case .macbookAir13:
             return 0.20 // 20 cm
         case .macbookPro14:
             return 0.22 // 22 cm
         case .macbookAir15:
             return 0.23 // 23 cm
-        case .macbook16, .macbook16CenterNew:
-            return 0.25 // 25 cm
+//        case .macbook16, .macbook16CenterNew:
+//            return 0.25 // 25 cm
         case .iMac24:
             return 0.46 // 46 cm
         case .studioDisplay27:
@@ -270,7 +280,7 @@ extension ARViewCoordinator {
     }
     
     private func evaluateEyeLevel(_ diff: Float) -> ErgonomicStatus {
-        // Ideal: eye level is level with or up to 15cm above top edge of screen (diff between 0.0m and +0.15m)
+        // Ideal
         if diff < -0.05 {
             return .danger // Monitor is too high (eye is below top by > 5cm)
         } else if diff >= -0.05 && diff < 0.0 {
