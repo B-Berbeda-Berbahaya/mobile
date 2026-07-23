@@ -54,9 +54,11 @@ struct AdjustItemPopover: View {
                         .fill(categoryColor.opacity(0.12))
                         .frame(width: 50, height: 50)
                     
-                    Image(systemName: objectType.sfSymbol)
-                        .font(.title2)
-                        .foregroundColor(categoryColor)
+                    Image(objectType.thumbnailImageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {

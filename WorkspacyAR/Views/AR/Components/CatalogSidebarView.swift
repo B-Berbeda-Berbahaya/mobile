@@ -51,20 +51,25 @@ struct CatalogSidebarView: View {
                                                 
                                                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
                                                     ForEach(section.items) { item in
+                                                        let isSelected = viewModel.selectedItem?.id == item.id
+                                                        let tileFill: Color = isSelected ? themeBrown.opacity(0.15) : Color.white.opacity(0.05)
+                                                        let iconColor: Color = isSelected ? themeBrown : .primary
+                                                        let backgroundColor: Color = isSelected ? Color.white.opacity(0.05) : Color.clear
+
                                                         Button(action: {
                                                             viewModel.select(item)
                                                         }) {
                                                             VStack(spacing: 8) {
                                                                 ZStack {
                                                                     RoundedRectangle(cornerRadius: 12)
-                                                                        .fill(viewModel.selectedItem?.id == item.id ? themeBrown.opacity(0.15) : Color.white.opacity(0.05))
+                                                                        .fill(tileFill)
                                                                         .frame(height: 64)
-                                                                    
+
                                                                     Image(systemName: item.systemImage)
                                                                         .font(.title2)
-                                                                        .foregroundColor(viewModel.selectedItem?.id == item.id ? themeBrown : .primary)
+                                                                        .foregroundColor(iconColor)
                                                                 }
-                                                                
+
                                                                 Text(item.name)
                                                                     .font(.system(size: 10, weight: .medium))
                                                                     .foregroundColor(.primary)
@@ -72,7 +77,7 @@ struct CatalogSidebarView: View {
                                                                     .multilineTextAlignment(.center)
                                                             }
                                                             .padding(6)
-                                                            .background(viewModel.selectedItem?.id == item.id ? Color.white.opacity(0.05) : Color.clear)
+                                                            .background(backgroundColor)
                                                             .cornerRadius(14)
                                                         }
                                                         .buttonStyle(PlainButtonStyle())
@@ -209,27 +214,32 @@ struct CatalogSidebarView: View {
                                             
                                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 8)], spacing: 8) {
                                                 ForEach(section.items) { item in
+                                                    let isSelected = viewModel.selectedItem?.id == item.id
+                                                    let tileFill: Color = isSelected ? themeBrown.opacity(0.2) : Color.white.opacity(0.05)
+                                                    let iconColor: Color = isSelected ? themeBrown : .primary
+                                                    let backgroundColor: Color = isSelected ? Color.white.opacity(0.05) : Color.clear
+
                                                     Button(action: {
                                                         viewModel.select(item)
                                                     }) {
                                                         VStack(spacing: 4) {
                                                             ZStack {
                                                                 RoundedRectangle(cornerRadius: 10)
-                                                                    .fill(viewModel.selectedItem?.id == item.id ? themeBrown.opacity(0.2) : Color.white.opacity(0.05))
+                                                                    .fill(tileFill)
                                                                     .frame(height: 50)
-                                                                
+
                                                                 Image(systemName: item.systemImage)
                                                                     .font(.body)
-                                                                    .foregroundColor(viewModel.selectedItem?.id == item.id ? themeBrown : .primary)
+                                                                    .foregroundColor(iconColor)
                                                             }
-                                                            
+
                                                             Text(item.name)
                                                                 .font(.system(size: 8, weight: .medium))
                                                                 .foregroundColor(.primary)
                                                                 .lineLimit(1)
                                                         }
                                                         .padding(4)
-                                                        .background(viewModel.selectedItem?.id == item.id ? Color.white.opacity(0.05) : Color.clear)
+                                                        .background(backgroundColor)
                                                         .cornerRadius(10)
                                                     }
                                                     .buttonStyle(PlainButtonStyle())
