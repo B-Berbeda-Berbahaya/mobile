@@ -145,10 +145,52 @@ public enum PlaceableObjectType: String, CaseIterable, Identifiable {
         }
     }
     
-        public var scaleCorrection: SIMD3<Float> {
-            return SIMD3<Float> (1,1,1)
-            }
+    public var scaleCorrection: SIMD3<Float> {
+        return SIMD3<Float> (1,1,1)
+    }
+    
+    public var canBeStackedOn: Bool {
+        switch self {
+        case .monitorRaiser, .deskmat:
+            return true
+        default:
+            return false
         }
+    }
     
+    public var footprintRadius: Float {
+        switch self {
+        case .macbookAir13: return 0.19
+        case .macbookPro14: return 0.20
+        case .macbookAir15: return 0.21
+        case .macbookPro16: return 0.22
+        case .iMac24: return 0.36
+        case .studioDisplay27: return 0.40
+        case .monitor32: return 0.42
+        case .appleMouse: return 0.07
+        case .deskmat: return 0.35
+        case .magicKeyboard: return 0.16
+        case .monitorRaiser: return 0.35
+        }
+    }
     
+    /// Tinggi fisik objek dalam meter (dipakai untuk stacking - seberapa tinggi objek lain harus "naik" kalau ditaruh di atasnya)
+    public var physicalHeight: Float {
+        switch self {
+        case .macbookAir13: return 0.011
+        case .macbookPro14: return 0.016
+        case .macbookAir15: return 0.012
+        case .macbookPro16: return 0.017
+        case .iMac24: return 0.147
+        case .studioDisplay27: return 0.168
+        case .monitor32: return 0.20
+        case .appleMouse: return 0.034
+        case .deskmat: return 0.003 // tipis, ~3mm
+        case .magicKeyboard: return 0.011
+        case .monitorRaiser: return 0.08
+        }
+    }
+}
+
+
 
