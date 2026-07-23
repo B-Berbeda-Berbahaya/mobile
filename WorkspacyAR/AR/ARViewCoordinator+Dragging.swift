@@ -77,7 +77,7 @@ extension ARViewCoordinator {
         }
     }
 
-    private func isPointInPolygon(point: SIMD2<Float>, polygon: [SIMD2<Float>]) -> Bool {
+    func isPointInPolygon(point: SIMD2<Float>, polygon: [SIMD2<Float>]) -> Bool {
         guard polygon.count >= 3 else { return false }
         var inside = false
         var j = polygon.count - 1

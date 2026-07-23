@@ -1,5 +1,6 @@
 import RealityKit
 import SwiftUI
+import SwiftData
 
 // Simple local model for tracking placed objects
 struct PlacedObjectSim: Identifiable, Equatable {
@@ -17,6 +18,7 @@ enum OnboardingStep {
 }
 
 struct ARPlannerView: View {
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var sessionManager = ARSessionManager()
     @State private var stateManager = StateManager()
     @State private var coordinator: ARViewCoordinator? = nil
@@ -28,6 +30,10 @@ struct ARPlannerView: View {
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
     @State private var showClearConfirmation = false
+    
+    // Save & Restore Layout States
+    @State private var showSaveLayoutDialog = false
+    @State private var saveLayoutNameInput = ""
     
     enum PanelState {
         case collapsed
@@ -80,7 +86,7 @@ struct ARPlannerView: View {
 
                 // Top Center Instruction Badge
                 VStack {
-                    if stateManager.isDeskLocked && selectedObject == nil {
+                    if stateManager.isDeskLocked && stateManager.pendingRestoringLayout == nil && selectedObject == nil {
                         HStack {
                             Spacer()
                             Text("Pilih letak untuk \(selectedObjectType?.displayName ?? "item")")
@@ -99,12 +105,13 @@ struct ARPlannerView: View {
                     Spacer()
                 }
 
-                // Floating Resizable Left Directory Panel
+                // Floating Resizable Left Directory Panel (Hanya muncul saat mode Placement Objek)
                 GeometryReader { geo in
                     VStack {
                         Spacer()
                         HStack {
-                            if showSidebar {
+                            let showDirectoryPanel = stateManager.isDeskLocked && stateManager.pendingRestoringLayout == nil
+                            if showDirectoryPanel {
                                 let expandedHeight = geo.size.height - 120
                                 
                                 VStack(alignment: .leading, spacing: 12) {
@@ -190,8 +197,8 @@ struct ARPlannerView: View {
                 }
                 .allowsHitTesting(true)
 
-                // Floating Ergonomics HUD Card (Bottom-Right)
-                if stateManager.isDeskLocked {
+                // Floating Ergonomics HUD Card (Bottom-Right, Hanya di Mode Placement)
+                if stateManager.isDeskLocked && stateManager.pendingRestoringLayout == nil {
                     VStack {
                         Spacer()
                         HStack {
@@ -374,6 +381,100 @@ struct ARPlannerView: View {
                     .zIndex(100)
                     .transition(.opacity.combined(with: .scale))
                 }
+
+                // BUNDLE ROTATION & CONFIRMATION CONTROLS (Live Preview Bundle Mode)
+                if stateManager.pendingRestoringLayout != nil {
+                    VStack {
+                        Spacer()
+                        VStack(spacing: 14) {
+                            HStack(spacing: 12) {
+                                // Rotate Left -15° Button
+                                Button(action: {
+                                    withAnimation {
+                                        stateManager.pendingBundleRotation -= .pi / 12
+                                    }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "rotate.left.fill")
+                                        Text("-15°")
+                                    }
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
+                                    .background(Color.black.opacity(0.75))
+                                    .clipShape(Capsule())
+                                }
+                                
+                                // Confirm Button: Pasang Di Sini
+                                Button(action: {
+                                    if let pendingLayout = stateManager.pendingRestoringLayout {
+                                        let targetPos = stateManager.focus3DPosition ?? SIMD3<Float>(0, 0, -0.5)
+                                        let rotation = stateManager.pendingBundleRotation
+                                        
+                                        coordinator?.removePreviewBundle()
+                                        stateManager.pendingRestoringLayout = nil
+                                        stateManager.pendingBundleRotation = 0.0
+                                        coordinator?.restoreSavedLayout(layout: pendingLayout, at: targetPos, rotationAngle: rotation)
+                                    }
+                                }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.title3)
+                                        Text("Pasang Di Sini")
+                                            .font(.headline)
+                                            .bold()
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 14)
+                                    .background(Color.accentColor)
+                                    .clipShape(Capsule())
+                                    .shadow(color: Color.accentColor.opacity(0.4), radius: 8)
+                                }
+                                
+                                // Rotate Right +15° Button
+                                Button(action: {
+                                    withAnimation {
+                                        stateManager.pendingBundleRotation += .pi / 12
+                                    }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Text("+15°")
+                                        Image(systemName: "rotate.right.fill")
+                                    }
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
+                                    .background(Color.black.opacity(0.75))
+                                    .clipShape(Capsule())
+                                }
+                            }
+                            
+                            // Cancel Button
+                            Button(action: {
+                                coordinator?.removePreviewBundle()
+                                stateManager.pendingRestoringLayout = nil
+                                stateManager.pendingBundleRotation = 0.0
+                            }) {
+                                Text("Batal Penempatan")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.red.opacity(0.85))
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .padding(.bottom, 36)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(150)
+                }
             }
             .onAppear {
                 onboardingStep = .scanningGuide
@@ -411,66 +512,104 @@ struct ARPlannerView: View {
             }
             .onChange(of: stateManager.isDeskLocked) { _, isLocked in
                 if isLocked {
-                    showSidebar = true
+                    panelState = .expanded
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(stateManager.isDeskLocked ? Color.green : Color.orange)
-                            .frame(width: 8, height: 8)
-                        Text("AR STUDIO")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.secondary)
-                        
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        
-                        Text(stateManager.isDeskLocked ? "Meja Terkunci - Tap untuk menaruh objek" : "Buat Area Meja")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .applyGlassEffect(in: Capsule())
-                    .shadow(color: Color.black.opacity(0.04), radius: 3)
+            .sheet(isPresented: $stateManager.showSavedLayoutsSheet) {
+                SavedLayoutsSheetView(stateManager: stateManager)
+            }
+            .alert("Simpan Layout Meja", isPresented: $showSaveLayoutDialog) {
+                TextField("Nama Layout", text: $saveLayoutNameInput)
+                Button("Simpan & Selesai") {
+                    coordinator?.saveCurrentLayout(modelContext: modelContext, name: saveLayoutNameInput)
+                    showSuccessScreen = true
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 8) {
-                        Button(action: {
-                            showSidebar.toggle()
-                        }) {
-                            Image(systemName: "plus")
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.semibold)
+                Button("Selesai Tanpa Menyimpan") {
+                    showSuccessScreen = true
+                }
+                Button("Batal", role: .cancel) {}
+            } message: {
+                Text("Masukkan nama tatanan meja AR ini untuk disimpan sebelum menyelesaikan.")
+            }
+            .toolbar {
+                if stateManager.pendingRestoringLayout == nil {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(stateManager.isDeskLocked ? Color.green : Color.orange)
+                                .frame(width: 8, height: 8)
+                            Text("AR STUDIO")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(.secondary)
+                            
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            
+                            Text(stateManager.isDeskLocked ? "Meja Terkunci - Tap untuk menaruh objek" : "Buat Area Meja")
+                                .font(.system(size: 8, weight: .bold))
                                 .foregroundColor(.primary)
-                                .padding(8)
                         }
-                        .applyGlassEffect(in: Circle())
-                        
-                        Button(action: {
-                            showClearConfirmation = true
-                        }) {
-                            Image(systemName: "trash")
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.semibold)
-                                .foregroundColor(.red)
-                                .padding(8)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .applyGlassEffect(in: Capsule())
+                        .shadow(color: Color.black.opacity(0.04), radius: 3)
+                    }
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        HStack(spacing: 8) {
+                            // Button View Saved Layouts Sheet (Tampil di mode buat meja & placement mode)
+                            Button(action: {
+                                stateManager.showSavedLayoutsSheet = true
+                            }) {
+                                Image(systemName: "folder.fill")
+                                    .font(.system(.body, design: .rounded))
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                    .padding(8)
+                            }
+                            .applyGlassEffect(in: Circle())
+
+                            if stateManager.isDeskLocked {
+                                // Button Unlock / Edit Desk Area
+                                Button(action: {
+                                    withAnimation {
+                                        stateManager.setDeskLock(false)
+                                    }
+                                }) {
+                                    Image(systemName: "lock.open.fill")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.orange)
+                                        .padding(8)
+                                }
+                                .applyGlassEffect(in: Circle())
+
+                                // Button Clear All 3D Objects
+                                Button(action: {
+                                    showClearConfirmation = true
+                                }) {
+                                    Image(systemName: "trash")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.red)
+                                        .padding(8)
+                                }
+                                .applyGlassEffect(in: Circle())
+                                
+                                // Button Finish & Save (Merged Checkmark)
+                                Button(action: {
+                                    saveLayoutNameInput = "Layout \(Date().formatted(date: .abbreviated, time: .shortened))"
+                                    showSaveLayoutDialog = true
+                                }) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
+                                        .padding(8)
+                                }
+                                .applyGlassEffect(in: Circle())
+                            }
                         }
-                        .applyGlassEffect(in: Circle())
-                        
-                        Button(action: {
-                            showSuccessScreen = true
-                        }) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(red: 0.42, green: 0.55, blue: 0.44))
-                                .padding(8)
-                        }
-                        .applyGlassEffect(in: Circle())
                     }
                 }
             }

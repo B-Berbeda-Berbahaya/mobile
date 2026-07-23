@@ -10,6 +10,7 @@ import Combine
 import Foundation
 import RealityKit
 import SwiftUI
+import SwiftData
 
 extension ARViewCoordinator {
     func rebuildDeskElements() {
@@ -253,5 +254,174 @@ extension ARViewCoordinator {
             image: cgImage,
             options: .init(semantic: .color)
         )
+    }
+
+    // MARK: - Save & Restore Layout
+    public func saveCurrentLayout(modelContext: ModelContext, name: String) {
+        let points = stateManager.calibrationPoints
+        guard points.count >= 3 else {
+            DispatchQueue.main.async {
+                self.stateManager.saveStatusMessage = "Kalibrasi minimal 3 titik meja dulu!"
+            }
+            return
+        }
+        
+        let count = Float(points.count)
+        let sumX = points.reduce(0) { $0 + $1.x }
+        let sumY = points.reduce(0) { $0 + $1.y }
+        let sumZ = points.reduce(0) { $0 + $1.z }
+        let centroid = SIMD3<Float>(sumX / count, sumY / count, sumZ / count)
+        
+        let relativePoints = points.map { $0 - centroid }
+        
+        var placedObjects: [CodablePlacedObject] = []
+        for object in anchorManager.placedObjects {
+            let worldPos = object.entity.position(relativeTo: nil)
+            let relPos = worldPos - centroid
+            let rot = object.entity.orientation(relativeTo: nil)
+            
+            let codablePos = CodableVector3(relPos)
+            let codableRot = CodableQuaternion(x: rot.vector.x, y: rot.vector.y, z: rot.vector.z, w: rot.vector.w)
+            
+            let obj = CodablePlacedObject(
+                id: object.id,
+                assetName: object.type.assetName,
+                relativePosition: codablePos,
+                rotation: codableRot
+            )
+            placedObjects.append(obj)
+        }
+        
+        let savedLayout = SavedDeskLayout(name: name, relativePoints: relativePoints, placedObjects: placedObjects)
+        modelContext.insert(savedLayout)
+        try? modelContext.save()
+        
+        DispatchQueue.main.async {
+            self.stateManager.saveStatusMessage = "Layout '\(name)' berhasil disimpan!"
+        }
+    }
+    
+    public func restoreSavedLayout(layout: SavedDeskLayout, at targetCentroid: SIMD3<Float>, rotationAngle: Float = 0.0) {
+        guard let arView = arView else { return }
+        
+        resetCalibration()
+        
+        let bundleRotQuat = simd_quatf(angle: rotationAngle, axis: [0, 1, 0])
+        
+        let restoredPoints = layout.relativePoints.map { relPoint -> SIMD3<Float> in
+            let rotatedRel = bundleRotQuat.act(relPoint)
+            return targetCentroid + rotatedRel
+        }
+        
+        self.stateManager.calibrationPoints = restoredPoints
+        self.stateManager.isDeskDetected = true
+        self.stateManager.setDeskLock(true)
+        
+        rebuildDeskElements()
+        updateHandlesVisibility(isLocked: true)
+        
+        for obj in layout.placedObjects {
+            let rotatedRelPos = bundleRotQuat.act(obj.relativePosition.simd)
+            let objWorldPos = targetCentroid + rotatedRelPos
+            
+            let objLocalRot = simd_quatf(vector: [obj.rotation.x, obj.rotation.y, obj.rotation.z, obj.rotation.w])
+            let totalRot = bundleRotQuat * objLocalRot
+            
+            if let type = PlaceableObjectType.allCases.first(where: { $0.assetName == obj.assetName }) {
+                Task { @MainActor in
+                    await self.placeObject(worldPosition: objWorldPos, type: type)
+                    if let newlyPlaced = self.anchorManager.placedObjects.last {
+                        newlyPlaced.entity.orientation = totalRot
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Live Preview Ghost Bundle
+    public func updatePreviewBundleLive() {
+        if let pendingLayout = stateManager.pendingRestoringLayout {
+            let targetPos = stateManager.focus3DPosition ?? SIMD3<Float>(0, 0, -0.5)
+            let rotation = stateManager.pendingBundleRotation
+            updatePreviewBundle(layout: pendingLayout, at: targetPos, rotationAngle: rotation)
+        } else {
+            removePreviewBundle()
+        }
+    }
+    
+    public func updatePreviewBundle(layout: SavedDeskLayout, at targetPos: SIMD3<Float>, rotationAngle: Float) {
+        guard let arView = arView else { return }
+        
+        let rotQuat = simd_quatf(angle: rotationAngle, axis: [0, 1, 0])
+        
+        if previewAnchor == nil || previewLayoutID != layout.id {
+            removePreviewBundle()
+            
+            let anchor = AnchorEntity()
+            anchor.position = targetPos
+            anchor.orientation = rotQuat
+            
+            // 1. Buat ghost visual bidang meja (kuning transparan)
+            let relativePoints = layout.relativePoints
+            if relativePoints.count >= 3 {
+                let frontIndices = Triangulator.triangulate(points: relativePoints)
+                if !frontIndices.isEmpty {
+                    var backIndices: [UInt32] = []
+                    for i in stride(from: 0, to: frontIndices.count, by: 3) {
+                        backIndices.append(frontIndices[i])
+                        backIndices.append(frontIndices[i + 2])
+                        backIndices.append(frontIndices[i + 1])
+                    }
+                    let doubleSidedIndices = frontIndices + backIndices
+                    
+                    var descriptor = MeshDescriptor(name: "preview_desk_mesh")
+                    let vertices = relativePoints.map { SIMD3<Float>($0.x, 0.001, $0.z) }
+                    descriptor.positions = MeshBuffers.Positions(vertices)
+                    descriptor.primitives = .triangles(doubleSidedIndices)
+                    descriptor.normals = MeshBuffers.Normals(Array(repeating: SIMD3<Float>(0, 1, 0), count: vertices.count))
+                    
+                    if let mesh = try? MeshResource.generate(from: [descriptor]) {
+                        var material = UnlitMaterial(color: UIColor.systemYellow.withAlphaComponent(0.35))
+                        material.blending = .transparent(opacity: 0.35)
+                        let deskGhost = ModelEntity(mesh: mesh, materials: [material])
+                        deskGhost.name = "preview_desk_model"
+                        anchor.addChild(deskGhost)
+                    }
+                }
+            }
+            
+            // 2. Buat ghost visual objek-objek 3D (kuning transparan)
+            for obj in layout.placedObjects {
+                let objRelPos = obj.relativePosition.simd
+                let objLocalRot = simd_quatf(vector: [obj.rotation.x, obj.rotation.y, obj.rotation.z, obj.rotation.w])
+                
+                if let type = PlaceableObjectType.allCases.first(where: { $0.assetName == obj.assetName }) {
+                    Task { @MainActor in
+                        let ghostEntity = await PlaceableEntityFactory.makeEntity(for: type)
+                        ghostEntity.name = "preview_ghost_\(obj.assetName)"
+                        let yellowGhost = UnlitMaterial(color: UIColor.systemYellow.withAlphaComponent(0.45))
+                        self.applyMaterialRecursively(ghostEntity, material: yellowGhost)
+                        ghostEntity.position = objRelPos
+                        ghostEntity.orientation = objLocalRot
+                        anchor.addChild(ghostEntity)
+                    }
+                }
+            }
+            
+            arView.scene.addAnchor(anchor)
+            self.previewAnchor = anchor
+            self.previewLayoutID = layout.id
+        } else if let anchor = previewAnchor {
+            anchor.position = targetPos
+            anchor.orientation = rotQuat
+        }
+    }
+    
+    public func removePreviewBundle() {
+        if let anchor = previewAnchor {
+            anchor.removeFromParent()
+            previewAnchor = nil
+            previewLayoutID = nil
+        }
     }
 }
