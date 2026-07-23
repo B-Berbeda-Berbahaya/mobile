@@ -145,9 +145,160 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         rebuildDeskElements()
         trackDraggedObjectAndBounce()
         updateReticle()
+        trackErgonomics()
     }
 
     func notifyObjectUpdate(_ placedObj: PlacedObject) {
         onPlacedObjectUpdated?(placedObj)
+    }
+}
+
+// MARK: - Real-Time Ergonomic Tracking Calculations
+extension ARViewCoordinator {
+    
+    private func trackErgonomics() {
+        guard let arView = arView, stateManager.isDeskLocked else {
+            // Reset metrics when not locked
+            DispatchQueue.main.async {
+                self.stateManager.realTimeDistance = 0
+                self.stateManager.realTimeEyeLevelDiff = 0
+                self.stateManager.complianceScore = 100
+                self.stateManager.distanceStatus = .optimal
+                self.stateManager.eyeLevelStatus = .optimal
+            }
+            return
+        }
+        
+        // 1. Get Camera Translation in world coordinates
+        let cameraTransform = arView.cameraTransform
+        let cameraPos = cameraTransform.translation
+        
+        // 2. Find nearest monitor / laptop object
+        let displays = anchorManager.placedObjects.filter {
+            $0.type.category == .monitor || $0.type.category == .laptop
+        }
+        
+        guard let nearestDisplay = findNearestDisplay(displays, to: cameraPos) else {
+            // No display placed yet, reset metrics
+            DispatchQueue.main.async {
+                self.stateManager.realTimeDistance = 0
+                self.stateManager.realTimeEyeLevelDiff = 0
+                self.stateManager.complianceScore = 100
+                self.stateManager.distanceStatus = .optimal
+                self.stateManager.eyeLevelStatus = .optimal
+            }
+            return
+        }
+        
+        // 3. Calculate distance and eye level diff
+        let displayPos = nearestDisplay.entity.position(relativeTo: nil)
+        
+        let dx = cameraPos.x - displayPos.x
+        let dz = cameraPos.z - displayPos.z
+        let distance = sqrt(dx*dx + dz*dz)
+        
+        let displayHeight = getPhysicalHeight(for: nearestDisplay.type)
+        let eyeLevelDiff = cameraPos.y - (displayPos.y + displayHeight)
+        
+        // 4. Determine Ergonomic Statuses
+        let distStatus = evaluateDistance(distance)
+        let eyeStatus = evaluateEyeLevel(eyeLevelDiff)
+        
+        // 5. Calculate Compliance Score
+        let score = calculateComplianceScore(distStatus: distStatus, eyeStatus: eyeStatus)
+        
+        // 6. Update StateManager on main queue
+        DispatchQueue.main.async {
+            self.stateManager.realTimeDistance = distance
+            self.stateManager.realTimeEyeLevelDiff = eyeLevelDiff
+            self.stateManager.distanceStatus = distStatus
+            self.stateManager.eyeLevelStatus = eyeStatus
+            self.stateManager.complianceScore = score
+        }
+    }
+    
+    private func findNearestDisplay(_ displays: [PlacedObject], to cameraPos: SIMD3<Float>) -> PlacedObject? {
+        var nearest: PlacedObject? = nil
+        var minDistance: Float = Float.infinity
+        
+        for display in displays {
+            let displayPos = display.entity.position(relativeTo: nil)
+            let dx = cameraPos.x - displayPos.x
+            let dz = cameraPos.z - displayPos.z
+            let dist = sqrt(dx*dx + dz*dz)
+            
+            if dist < minDistance {
+                minDistance = dist
+                nearest = display
+            }
+        }
+        
+        return nearest
+    }
+    
+    private func getPhysicalHeight(for type: PlaceableObjectType) -> Float {
+        switch type {
+        case .macbookAir13, .macbookAir13new:
+            return 0.20 // 20 cm
+        case .macbookPro14:
+            return 0.22 // 22 cm
+        case .macbookAir15:
+            return 0.23 // 23 cm
+        case .macbook16, .macbook16CenterNew:
+            return 0.25 // 25 cm
+        case .iMac24:
+            return 0.46 // 46 cm
+        case .studioDisplay27:
+            return 0.48 // 48 cm
+        case .monitor32:
+            return 0.52 // 52 cm
+        default:
+            return 0.20
+        }
+    }
+    
+    private func evaluateDistance(_ distance: Float) -> ErgonomicStatus {
+        if distance < 0.50 {
+            return .danger // Too close!
+        } else if distance <= 0.75 {
+            return .optimal // Ideal range: 50-75cm
+        } else if distance <= 1.00 {
+            return .warning // A bit far: 75-100cm
+        } else {
+            return .danger // Too far!
+        }
+    }
+    
+    private func evaluateEyeLevel(_ diff: Float) -> ErgonomicStatus {
+        // Ideal: eye level is level with or up to 15cm above top edge of screen (diff between 0.0m and +0.15m)
+        if diff < -0.05 {
+            return .danger // Monitor is too high (eye is below top by > 5cm)
+        } else if diff >= -0.05 && diff < 0.0 {
+            return .warning // Slightly high
+        } else if diff >= 0.0 && diff <= 0.15 {
+            return .optimal // Perfect alignment
+        } else if diff > 0.15 && diff <= 0.25 {
+            return .warning // Slightly low (user looking down slightly)
+        } else {
+            return .danger // Monitor is too low (diff > 25cm, eye is far above top edge)
+        }
+    }
+    
+    private func calculateComplianceScore(distStatus: ErgonomicStatus, eyeStatus: ErgonomicStatus) -> Int {
+        var score = 100
+        
+        switch distStatus {
+        case .optimal: break
+        case .warning: score -= 25
+        case .danger: score -= 50
+        }
+        
+        switch eyeStatus {
+        case .optimal: break
+        case .warning: score -= 25
+        case .danger: score -= 50
+        }
+        
+        return max(score, 0)
     }
 }
