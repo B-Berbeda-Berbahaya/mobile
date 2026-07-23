@@ -190,6 +190,94 @@ struct ARPlannerView: View {
                 }
                 .allowsHitTesting(true)
 
+                // Floating Ergonomics HUD Card (Bottom-Right)
+                if stateManager.isDeskLocked {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "gauge.medium")
+                                        .font(.caption2)
+                                        .foregroundColor(stateManager.complianceScore >= 75 ? .green : (stateManager.complianceScore >= 50 ? .orange : .red))
+                                    Text("WORKSPACE WELLNESS")
+                                        .font(.system(size: 8, weight: .bold))
+                                        .foregroundColor(.secondary)
+                                        .tracking(1)
+                                    Spacer()
+                                    Text("\(stateManager.complianceScore)%")
+                                        .font(.system(size: 11, weight: .bold, design: .serif))
+                                        .foregroundColor(stateManager.complianceScore >= 75 ? .green : (stateManager.complianceScore >= 50 ? .orange : .red))
+                                }
+                                
+                                Divider()
+                                    .background(Color.secondary.opacity(0.15))
+                                
+                                HStack(spacing: 16) {
+                                    // Distance Info
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("DISTANCE")
+                                            .font(.system(size: 7, weight: .semibold))
+                                            .foregroundColor(.secondary)
+                                        
+                                        if stateManager.realTimeDistance > 0 {
+                                            Text(String(format: "%.0f cm", stateManager.realTimeDistance * 100))
+                                                .font(.system(.subheadline, design: .rounded))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(stateManager.distanceStatus.color)
+                                        } else {
+                                            Text("No Monitor")
+                                                .font(.system(size: 11, weight: .semibold))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    Spacer(minLength: 8)
+                                    
+                                    // Eye Level Info
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("EYE LEVEL")
+                                            .font(.system(size: 7, weight: .semibold))
+                                            .foregroundColor(.secondary)
+                                        
+                                        if stateManager.realTimeDistance > 0 {
+                                            Text(String(format: "%+.0f cm", stateManager.realTimeEyeLevelDiff * 100))
+                                                .font(.system(.subheadline, design: .rounded))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(stateManager.eyeLevelStatus.color)
+                                        } else {
+                                            Text("--")
+                                                .font(.system(.subheadline, design: .rounded))
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                                
+                                if stateManager.realTimeDistance > 0 {
+                                    Divider()
+                                        .background(Color.secondary.opacity(0.15))
+                                    Text("*Posisi mata diestimasi berdasarkan posisi genggam perangkat (jarak genggam ~30cm, tinggi mata ~15cm).")
+                                        .font(.system(size: 6))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                            .padding(14)
+                            .frame(width: 190)
+                            .applyGlassEffect(in: RoundedRectangle(cornerRadius: 20))
+                            .shadow(color: Color.black.opacity(0.12), radius: 8, x: 0, y: 4)
+                            .padding(.trailing, 20)
+                            .padding(.bottom, 20)
+                        }
+                    }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .zIndex(10)
+                }
+
                 // 1. Onboarding Tutorial Dialog (Centered Popup)
                 if onboardingStep == .scanningGuide {
                     ZStack {

@@ -60,6 +60,27 @@ public final class StateManager {
         canReset = value
     }
 
+    // Ergonomics Metrics
+    public var realTimeDistance: Float = 0.0
+    public var realTimeEyeLevelDiff: Float = 0.0
+    public var distanceStatus: ErgonomicStatus = .optimal
+    public var eyeLevelStatus: ErgonomicStatus = .optimal
+    public var complianceScore: Int = 100
+
     public init() {}
 
+}
+
+public enum ErgonomicStatus: String, Codable {
+    case optimal
+    case warning
+    case danger
+    
+    public var color: Color {
+        switch self {
+        case .optimal: return .green
+        case .warning: return .orange
+        case .danger: return .red
+        }
+    }
 }
