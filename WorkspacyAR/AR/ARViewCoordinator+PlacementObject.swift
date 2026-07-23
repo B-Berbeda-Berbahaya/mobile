@@ -25,25 +25,25 @@ extension ARViewCoordinator {
             {
                 // Ignore virtual desk
             } else {
-                let targetEntity =
-                entity.name == "highlight_overlay"
-                ? (entity.parent as? ModelEntity ?? entity) : entity
-                
-                if let placedObject = anchorManager.placedObjects.first(where: {
-                    $0.entity == targetEntity
-                }) {
-                    selectObject(placedObject)
-                    return
+                var currentNode: Entity? = entity.name == "highlight_overlay"
+                    ? (entity.parent ?? entity) : entity
+                while let node = currentNode {
+                    if let placedObject = anchorManager.placedObjects.first(where: { $0.entity == node }) {
+                        selectObject(placedObject)
+                        return
+                    }
+                    currentNode = node.parent
                 }
             }
         }
         
-        guard stateManager.isDeskLocked else { return }
-        
-        // Unwrap di sini — kalau nggak ada tipe aktif, memang belum bisa place apapun
+        // Unwrap di sini — kalau nggak ada tipe aktif, deselect objek yang terpilih
         guard let type = activePlacingType else {
+            deselectCurrentObject()
             return
         }
+        
+        guard stateManager.isDeskLocked else { return }
         
         let hitResults = arView.hitTest(location)
         

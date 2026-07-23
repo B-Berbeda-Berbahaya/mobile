@@ -29,6 +29,7 @@ public final class ARViewCoordinator: NSObject, ARSessionDelegate {
         self.deskAnchor = anchor
     }
     
+    var initialPositionBeforeMove: SIMD3<Float>? = nil
     var lastValidPosition: SIMD3<Float>? = nil
     var wasDragging = false
 
