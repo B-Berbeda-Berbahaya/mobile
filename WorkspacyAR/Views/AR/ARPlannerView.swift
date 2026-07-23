@@ -331,11 +331,11 @@ struct ARPlannerView: View {
                             }
 
                         VStack(spacing: 20) {
-                            Text("Hapus Semua?")
+                            Text("Hapus Semua Objek?")
                                 .font(.headline)
                                 .foregroundColor(.primary)
 
-                            Text("Area meja dan objek akan dihapus. Lanjutkan?")
+                            Text("Semua objek 3D di atas meja akan dihapus. Lanjutkan?")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -551,10 +551,13 @@ struct ARPlannerView: View {
     private func clearWorkspace() {
         placedObjects.removeAll()
         selectedObject = nil
-        coordinator?.anchorManager.removeAll(
-            in: coordinator?.arView ?? RealityKit.ARView()
-        )
-        coordinator?.resetCalibration()
+        if let placedObjectsInAR = coordinator?.anchorManager.placedObjects {
+            let copyList = Array(placedObjectsInAR)
+            for object in copyList {
+                coordinator?.removeObject(withID: object.id)
+            }
+        }
+        coordinator?.deselectCurrentObject()
     }
 
     private func updateSelected(rotation: Float) {
