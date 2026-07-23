@@ -1,0 +1,22 @@
+__type: "tm_mesh_resource"
+__uuid: "94380d46-5848-2577-64b4-73d45714f9b7"
+models: [
+	{
+		__uuid: "b3171ea8-5935-8be5-7be2-e1da3d4cded9"
+		name: "iWQgjifNecoaZWs_vray_Black_0"
+		geometry: "63095d8f-81a5-33f7-774e-d4e7d7235efe"
+		bounds_min: {
+			__uuid: "bfac5231-3ff7-0bcb-2942-dcaab1911823"
+			x: -65.878395080566406
+			y: -4563.169921875
+			z: 399.10824584960938
+		}
+		bounds_max: {
+			__uuid: "081845b2-8129-3b19-2495-348d31052fc6"
+			x: -24.222099304199219
+			y: -4524.91015625
+			z: 405.52325439453125
+		}
+	}
+]
+__asset_uuid: "484ffae1-09ed-3d8d-f182-34474ee5728b"

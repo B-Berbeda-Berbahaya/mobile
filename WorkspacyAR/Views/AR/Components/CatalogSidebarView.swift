@@ -297,14 +297,3 @@ struct CatalogSidebarView: View {
     }
 }
 
-#Preview {
-    ZStack(alignment: .leading) {
-        Color.black.ignoresSafeArea()
-        CatalogSidebarView(
-            selectedObjectType: .constant(.macbook16),
-            selectedCategory: .constant(.laptop),
-            onPlaceItem: { _ in },
-            onClose: {}
-        )
-    }
-}

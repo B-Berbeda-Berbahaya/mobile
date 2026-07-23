@@ -1,0 +1,33 @@
+__type: "tm_texture"
+__uuid: "bb315734-9f59-f7ab-364e-51a8db0a62bb"
+source_filename: "/Users/thor/Documents/code/asset for arkit+realitykit/workspacy-assets/MagicKeyboardMac.usdz[textures/vray_gradient_grey_baseColor.png]"
+source_texture: "4125d11a-8dd7-5e08-a5a5-30d66ba35c50"
+transform: "6b5fd8e4eec2cf5b"
+transform_settings: {
+	__uuid: "7fc824eb-bc76-1397-cf89-95d9dac15498"
+	__prototype_type: "tm_creation_graph"
+	__prototype_uuid: "565f9a46-b719-d76a-7eaa-36e7faaddc5f"
+	graph: {
+		__uuid: "1b1f0418-ef5c-b30c-3ea1-71f0f1e46ff7"
+		__prototype_type: "tm_graph"
+		__prototype_uuid: "31ddc72a-62d2-0d6e-83b1-392db7f56278"
+		interface: {
+			__uuid: "3d7dcb70-5414-d710-e34c-62436fe8d329"
+			__prototype_type: "tm_graph_interface"
+			__prototype_uuid: "fafb8c6f-264f-0609-fc29-68fbe0d040c1"
+		}
+	}
+}
+color_space: {
+	__uuid: "00d22f30-775b-37b4-7ec6-9667ce347f76"
+	color_primary: 1
+	transfer_function: 2
+	color_model: 1
+}
+__asset_uuid: "61139127-a985-a95f-0bf9-bb282473c94d"
+__asset_labels: [
+	"e4bec38d8f73f423"
+]
+__asset_thumbnail: {
+	__uuid: "d741a1c9-a9c9-7285-a788-a57994fa2bae"
+}

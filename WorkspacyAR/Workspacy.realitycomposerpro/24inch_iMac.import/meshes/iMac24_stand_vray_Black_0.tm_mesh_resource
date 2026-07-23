@@ -1,0 +1,22 @@
+__type: "tm_mesh_resource"
+__uuid: "e2ec6f56-cdb2-c151-2487-be43a4dc1604"
+models: [
+	{
+		__uuid: "9b380cf7-6532-59d6-bcfa-bf5bbee33545"
+		name: "iMac24_stand_vray_Black_0"
+		geometry: "69d2cfea-3c27-cd1c-56d1-83ba46ca1816"
+		bounds_min: {
+			__uuid: "aef001c6-c1e0-98a3-95f8-542c220f3db7"
+			x: -747.718017578125
+			y: -1876.7701416015625
+			z: -555.1080322265625
+		}
+		bounds_max: {
+			__uuid: "d34294a0-cf65-9d41-3f9d-efde74cacbf5"
+			x: 657.60101318359375
+			y: -9.3701229095458984
+			z: 924.34503173828125
+		}
+	}
+]
+__asset_uuid: "9d2ef02c-f5dc-ac40-206c-ac1bb0f8529c"

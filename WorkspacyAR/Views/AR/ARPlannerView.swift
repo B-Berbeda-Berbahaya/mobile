@@ -23,7 +23,7 @@ struct ARPlannerView: View {
 
     @State private var placedObjects: [PlacedObjectSim] = []
     @State private var selectedObject: PlacedObjectSim? = nil
-    @State private var selectedObjectType: PlaceableObjectType = .macbookAir13new
+    @State private var selectedObjectType: PlaceableObjectType?
     @State private var selectedCategory: ItemCategory = .laptop
     @State private var showSidebar = false
     @State private var showSuccessScreen = false
@@ -83,7 +83,7 @@ struct ARPlannerView: View {
                     if stateManager.isDeskLocked && selectedObject == nil {
                         HStack {
                             Spacer()
-                            Text("Pilih letak untuk \(selectedObjectType.displayName)")
+                            Text("Pilih letak untuk \(selectedObjectType?.displayName ?? "item")")
                                 .font(.system(.caption, design: .rounded))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
@@ -167,8 +167,8 @@ struct ARPlannerView: View {
                                     // Content Section
                                     if panelState == .expanded {
                                         DirectoryView(onPlaceItem: { item in
-                                            selectedObjectType = mapDeskItemToObjectType(item)
-                                            selectedCategory = selectedObjectType.category
+                                            selectedObjectType = item.objectType
+                                            selectedCategory = item.objectType.category
                                         }, searchText: $searchText)
                                         .transition(.opacity)
                                     }
@@ -396,7 +396,10 @@ struct ARPlannerView: View {
                     }
                 }
             }
-            .onChange(of: stateManager.isDeskLocked) { isLocked in
+            .onChange(of: selectedObjectType) { _, newType in
+                coordinator?.activePlacingType = newType
+            }
+            .onChange(of: stateManager.isDeskLocked) { _, isLocked in
                 if isLocked {
                     showSidebar = true
                 }
@@ -579,22 +582,25 @@ struct ARPlannerView: View {
         selectedObject = nil
     }
 
-    private func mapDeskItemToObjectType(_ item: DeskItem)
-        -> PlaceableObjectType
-    {
+    private func mapDeskItemToObjectType(_ item: DeskItem) -> PlaceableObjectType? {
         let name = item.name.lowercased()
         if name.contains("monitor") {
             return .monitor32
         } else if name.contains("imac") {
             return .iMac24
         } else if name.contains("macbook") || name.contains("laptop") {
-            return .macbook16
+            return .macbookPro16
         } else if name.contains("keyboard") {
             return .magicKeyboard
         } else if name.contains("mouse") {
             return .appleMouse
+        } else if name.contains("accessoris") {
+            return .monitorRaiser
+        } else if name.contains("deskmat") {
+            return .deskmat
+        } else {
+            return nil
         }
-        return .macbook16
     }
 }
 
