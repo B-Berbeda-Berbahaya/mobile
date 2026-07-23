@@ -10,35 +10,23 @@ import RealityKit
 
 extension ARViewCoordinator {
     
-    /// Ensures all placed 3D objects maintain an upright orientation by locking Pitch and Roll,
-    /// leaving only the Yaw (Y-axis rotation) active
-    func keepObjectsUpright() {
-        guard let arView = arView else { return }
-        for anchor in arView.scene.anchors {
-            for child in anchor.children {
-                if let modelEntity = child as? ModelEntity,
-                    modelEntity.name != "highlight_overlay",
-                    modelEntity.name != "desk_model",
-                    !modelEntity.name.hasPrefix("handle_"),
-                    !modelEntity.name.hasPrefix("line_"),
-                    modelEntity.name != "rubber_band",
-                    modelEntity.name != "invalid_ghost"
-                {
-
+    func keepObjectsUpright() {   // hapus "private"
+            guard let arView = arView else { return }
+            for anchor in arView.scene.anchors {
+                for child in anchor.children {
+                    guard let modelEntity = child as? ModelEntity,
+                          modelEntity.name.hasPrefix("placed_"),
+                          modelEntity != selectedPlacedObject?.entity || stateManager.interactionMode != .rotate
+                    else { continue }
+                    
                     var currentTransform = modelEntity.transform
-                    let forward = currentTransform.rotation.act(
-                        SIMD3<Float>(0, 0, 1)
-                    )
+                    let forward = currentTransform.rotation.act(SIMD3<Float>(0, 0, 1))
                     let yawAngle = atan2(forward.x, forward.z)
-                    currentTransform.rotation = simd_quatf(
-                        angle: yawAngle,
-                        axis: SIMD3<Float>(0, 1, 0)
-                    )
+                    currentTransform.rotation = simd_quatf(angle: yawAngle, axis: SIMD3<Float>(0, 1, 0))
                     modelEntity.transform = currentTransform
                 }
             }
         }
-    }
     
     public func updateRotation(forID id: UUID, angleDegrees: Float) {
         if let object = anchorManager.placedObjects.first(where: { $0.id == id }

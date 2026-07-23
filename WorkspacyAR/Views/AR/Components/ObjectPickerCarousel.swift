@@ -78,7 +78,7 @@ struct ObjectPickerCarousel: View {
 
 #Preview {
     ObjectPickerCarousel(
-        selectedObjectType: .constant(.macbook16),
+        selectedObjectType: .constant(.macbookPro16),
         selectedCategory: .constant(.laptop)
     )
 }

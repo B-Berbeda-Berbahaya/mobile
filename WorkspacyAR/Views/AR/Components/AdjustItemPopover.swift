@@ -32,7 +32,7 @@ struct AdjustItemPopover: View {
             } else {
                 return (true, "Optimal Placement", "Monitor is at the ideal ergonomic distance (\(Int(distanceToUser)) cm). Make sure the top matches your eye level.")
             }
-        case .macbook16:
+        case .macbookPro16:
             return (false, "Neck Flexion Risk", "Laptops cause neck strain when used flat. We recommend a laptop stand and external keyboard.")
         default:
             return (true, "Ready to use", "This accessory is placed correctly in your active reach zone.")

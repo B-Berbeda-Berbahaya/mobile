@@ -89,6 +89,6 @@ struct DirectoryItemCell: View {
     }
 }
 
-#Preview {
-    DirectoryView(searchText: .constant(""))
-}
+//#Preview {
+//    DirectoryView(searchText: .constant(""))
+//}
