@@ -766,3 +766,7 @@ extension View {
         }
     }
 }
+
+#Preview {
+    ARPlannerView()
+}

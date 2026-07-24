@@ -13,7 +13,9 @@ extension View {
         if #available(iOS 26.4, *) {
             self.buttonStyle(.glassProminent).tint(color)
         } else {
-            self.tint(color)
+            self
+                .buttonStyle(.borderedProminent)
+                .tint(color)
         }
     }
 }
