@@ -27,14 +27,13 @@ struct GuideObjectView: View {
                 if isCompact {
                     // Horizontal layout: image on left
                     HStack(alignment: .top) {
-                        AsyncImage(url: URL(string: steps[currentIndex].imageURL)!) { image in
-                            image.image?
-                                .resizable()
-                                .scaledToFit()
-                        }
-                        .clipShape(.rect(cornerRadius: 16))
-                        .frame(width: imageWidth)
-                        .frame(maxHeight: .infinity, alignment: .top)
+                        Image(steps[currentIndex].imageURL)
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(.rect(cornerRadius: 16))
+                            .padding(.top, 16)
+                            .frame(width: imageWidth)
+                            .frame(maxHeight: .infinity, alignment: .top)
 
                         VStack(alignment: .leading) {
                             Text(steps[currentIndex].title)
@@ -73,14 +72,13 @@ struct GuideObjectView: View {
                     // Original vertical layout
                     VStack(alignment: .center) {
                         VStack {
-                            AsyncImage(url: URL(string: steps[currentIndex].imageURL)!) { image in
-                                image.image?
-                                    .resizable()
-                                    .scaledToFit()
-                            }
-                            .clipShape(.rect(topLeadingRadius: 16, topTrailingRadius: 16))
-                            .frame(width: imageWidth)
-                            .frame(maxHeight: 308, alignment: .top)
+                            Image(steps[currentIndex].imageURL)
+                                .resizable()
+                                .scaledToFit()
+                                .clipShape(.rect(cornerRadius: 16))
+                                .padding(.top, 16)
+                                .frame(width: imageWidth)
+                                .frame(maxHeight: 324, alignment: .top)
 
                             Group {
                                 Text(steps[currentIndex].title)
