@@ -41,7 +41,7 @@ struct ARPlannerView: View {
     }
     @State private var panelState: PanelState = .expanded
     @State private var searchText = ""
-    @GestureState private var dragOffset: CGFloat = 0
+    @State private var dragOffset: CGFloat = 0
     private let collapsedHeight: CGFloat = 160
     
     enum OnboardingStep {
@@ -115,61 +115,64 @@ struct ARPlannerView: View {
                                 let expandedHeight = geo.size.height - 120
                                 
                                 VStack(alignment: .leading, spacing: 12) {
-                                    // Drag Handle & Header
-                                    HStack {
-                                        Spacer()
-                                        Capsule()
-                                            .fill(Color.secondary.opacity(0.6))
-                                            .frame(width: 40, height: 5)
-                                        Spacer()
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        // Drag Handle
+                                        HStack {
+                                            Spacer()
+                                            Capsule()
+                                                .fill(Color.secondary.opacity(0.6))
+                                                .frame(width: 40, height: 5)
+                                            Spacer()
+                                        }
+                                        .frame(height: 20)
+                                        .background(Color.clear)
+                                        
+                                        // Header Title
+                                        Text("Directory Studio")
+                                            .font(.system(.title3, design: .rounded))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
+                                            .padding(.horizontal, 16)
+                                        
+                                        // Custom Glassmorphic Search Bar
+                                        HStack {
+                                            Image(systemName: "magnifyingglass")
+                                                .font(.footnote)
+                                                .foregroundColor(.secondary)
+                                            TextField("Search items...", text: $searchText)
+                                                .font(.system(size: 13))
+                                                .textFieldStyle(.plain)
+                                            if !searchText.isEmpty {
+                                                Button(action: { searchText = "" }) {
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .font(.footnote)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            }
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .applyGlassEffect(in: RoundedRectangle(cornerRadius: 12))
+                                        .padding(.horizontal, 16)
                                     }
-                                    .frame(height: 20)
-                                    .background(Color.white.opacity(0.001)) // Make entire header draggable
+                                    .background(Color.white.opacity(0.001)) // Make entire header container draggable
                                     .gesture(
                                         DragGesture()
-                                            .updating($dragOffset) { value, state, _ in
-                                                state = value.translation.height
+                                            .onChanged { value in
+                                                dragOffset = value.translation.height
                                             }
                                             .onEnded { value in
                                                 let dragThreshold: CGFloat = 50
-                                                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                                                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                                                     if value.translation.height < -dragThreshold {
                                                         panelState = .expanded
                                                     } else if value.translation.height > dragThreshold {
                                                         panelState = .collapsed
                                                     }
+                                                    dragOffset = 0 // Animate dragOffset back to 0 to avoid snapping glitch
                                                 }
                                             }
                                     )
-                                    .padding(.top, 4)
-                                    
-                                    // Header Title
-                                    Text("Directory Studio")
-                                        .font(.system(.title3, design: .rounded))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.primary)
-                                        .padding(.horizontal, 16)
-                                    
-                                    // Custom Glassmorphic Search Bar
-                                    HStack {
-                                        Image(systemName: "magnifyingglass")
-                                            .font(.footnote)
-                                            .foregroundColor(.secondary)
-                                        TextField("Search items...", text: $searchText)
-                                            .font(.system(size: 13))
-                                            .textFieldStyle(.plain)
-                                        if !searchText.isEmpty {
-                                            Button(action: { searchText = "" }) {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .font(.footnote)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                    }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .applyGlassEffect(in: RoundedRectangle(cornerRadius: 12))
-                                    .padding(.horizontal, 16)
                                     
                                     // Content Section
                                     if panelState == .expanded {
@@ -297,14 +300,19 @@ struct ARPlannerView: View {
                             },
                             steps: [
                                 GuideStep(
-                                    imageURL: "https://picsum.photos/seed/picsum/480/300",
-                                    title: "Scan Area Meja",
-                                    description: "Gerakkan perangkat Anda secara perlahan untuk mendeteksi permukaan meja kerja Anda."
+                                    imageURL: "guide-1",
+                                    title: "Scan Your Desk",
+                                    description: "Slowly move your device around to detect your desk surface."
                                 ),
                                 GuideStep(
-                                    imageURL: "https://picsum.photos/seed/picsum/300/300",
-                                    title: "Tempatkan Produk",
-                                    description: "Pilih produk dari katalog studio di bawah dan tempatkan pada area meja yang terdeteksi."
+                                    imageURL: "guide-2",
+                                    title: "Hold at Chest Height",
+                                    description: "Hold your device at chest height while seated to accurately calibrate eye level tracking."
+                                ),
+                                GuideStep(
+                                    imageURL: "guide-3",
+                                    title: "Place Studio Items",
+                                    description: "Select products from the studio catalog below and place them on the detected desk surface."
                                 )
                             ]
                         )

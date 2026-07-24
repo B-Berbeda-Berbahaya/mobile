@@ -80,24 +80,24 @@ public struct ARContainerView: View {
 
             // CONDITIONAL OVERLAYS
             if stateManager.isDeskLocked {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            withAnimation { stateManager.setDeskLock(false) }
-                        }) {
-                            Image(systemName: "lock.open.fill")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                                .padding(12)
-                        }
-                        .applyGlassEffect(in: Circle())
-                        .shadow(radius: 4)
-                    }
-                    .padding(.top, 60)
-                    .padding(.trailing, 20)
+//                VStack {
+//                    HStack {
+//                        Spacer()
+//                        Button(action: {
+//                            withAnimation { stateManager.setDeskLock(false) }
+//                        }) {
+//                            Image(systemName: "lock.open.fill")
+//                                .font(.body)
+//                                .foregroundColor(.primary)
+//                                .padding(12)
+//                        }
+//                        .applyGlassEffect(in: Circle())
+//                        .shadow(radius: 4)
+//                    }
+//                    .padding(.top, 60)
+//                    .padding(.trailing, 20)
                     Spacer()
-                }
+//                }
             } else {
                 unlockedCalibrationOverlay
             }
